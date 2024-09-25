@@ -2,6 +2,7 @@
     "files.associations": {
         "libafl_qemu.h": "c",
         "pismmcore.h": "c",
-        "pismmcommunicationregiontable.h": "c"
+        "pismmcommunicationregiontable.h": "c",
+        "ratio": "c"
     }
 }
