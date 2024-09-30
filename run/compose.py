@@ -10,39 +10,34 @@ utk_path = "/home/w/go/bin/utk"
 uefiextract_path = "./uefiextract"
 ghidra_analyzeheadless_path = "./ghidra_11.1.2_PUBLIC/support/analyzeHeadless"
 
+ghidra_project_path = "/tmp/ghidra_project"
+
+count_bbl_file_path = "/tmp/count_bbl.py"
+count_bbl_src = '''
+from ghidra.program.model.block import SimpleBlockIterator
+from ghidra.program.model.block import BasicBlockModel
+from ghidra.program.model.block import SimpleBlockModel
+from ghidra.util.task import TaskMonitor
+
+args = getScriptArgs()
+bbm = SimpleBlockModel(currentProgram)
+blocks = bbm.getCodeBlocks(TaskMonitor.DUMMY)
+block = blocks.next()
+bbs = set()
+while block:
+    bbs.add(block.getFirstStartAddress())
+    block = blocks.next()
+print("\nall basic blocks:{}\n".format(len(bbs)))
+'''
+
 def count_basic_blocks(exe_file):
-    if os.path.exists("./ghidra_project/body.bin.gpr"):
-        os.remove("./ghidra_project/body.bin.gpr")
-    if os.path.exists("./ghidra_project/body.bin.rep"):
-        shutil.rmtree("./ghidra_project/body.bin.rep")
-    ghidra_command = [ghidra_analyzeheadless_path, "./ghidra_project","body.bin","-import", exe_file, "-postScript", "./count_bbl.py" ]
+    shutil.rmtree(ghidra_project_path)
+    os.mkdir(ghidra_project_path)
+    ghidra_command = [ghidra_analyzeheadless_path, ghidra_project_path,"body.bin","-import", exe_file, "-postScript", count_bbl_file_path ]
     result = subprocess.run(ghidra_command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
     if "all basic blocks:" in result.stdout:
         return int(result.stdout.split("all basic blocks:")[1].split("\n")[0])
     return 0
-    # Open the binary with Radare2 in analysis mode
-    # r2 = r2pipe.open(exe_file)
-    # r2.cmd('aaa')  # Perform auto analysis
-    
-    # # Get all the functions in the binary
-    # functions = r2.cmdj('aflj')  # JSON output of all functions
-    # if not functions:
-    #     print("No functions found in the binary.")
-    #     return 0
-
-    # total_basic_blocks = 0
-
-    # # Iterate through each function to count its basic blocks
-    # for func in functions:
-    #     # Get basic block information for the function
-    #     function_addr = func['offset']
-    #     basic_blocks = r2.cmdj(f'afbj @ {function_addr}')  # Get basic blocks as JSON
-    #     if basic_blocks:
-    #         total_basic_blocks += len(basic_blocks)
-
-    # print(f"Total Basic Blocks: {total_basic_blocks}")
-    # r2.quit()
-    # return total_basic_blocks
 
 def find_dicts_with_key(obj,key_):
     results = []
@@ -108,12 +103,15 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
         utk_insert_command = [utk_path,ovmf_firmware,"insert_after","TcgMorLockSmm","/tmp/smm.ffs","save",ovmf_firmware]
         subprocess.run(utk_insert_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
     print("total bbls {}".format(total_bbl))
+def prepare_count_bbl_file():
+    with open(count_bbl_file_path,"w") as f:
+        f.write(count_bbl_src)
+
 
 
 if not os.path.exists("/tmp/smm"):
     os.mkdir("/tmp/smm")
-if not os.path.exists("/ghidra_project"):
-    os.mkdir("/ghidra_project")
+prepare_count_bbl_file()
 smm_modules = extract_smm_modules(sys.argv[1])
 insert_smm_modules(sys.argv[2],sys.argv[1],smm_modules)
 
