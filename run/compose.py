@@ -27,11 +27,12 @@ bbs = set()
 while block:
     bbs.add(block.getFirstStartAddress())
     block = blocks.next()
-print("\nall basic blocks:{}\n".format(len(bbs)))
+print("all basic blocks:{}".format(len(bbs)))
 '''
 
 def count_basic_blocks(exe_file):
-    shutil.rmtree(ghidra_project_path)
+    if os.path.exists(ghidra_project_path):
+        shutil.rmtree(ghidra_project_path)
     os.mkdir(ghidra_project_path)
     ghidra_command = [ghidra_analyzeheadless_path, ghidra_project_path,"body.bin","-import", exe_file, "-postScript", count_bbl_file_path ]
     result = subprocess.run(ghidra_command, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
