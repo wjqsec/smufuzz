@@ -6,6 +6,18 @@ import shutil
 import os
 import r2pipe
 
+
+ovmf_guids = [
+    "A47EE2D8-F60E-42FD-8E58-7BD65EE4C29B",
+    "33FB3535-F15E-4C17-B303-5EB94595ECB6",
+    "A3FF0EF5-0C28-42F5-B544-8C7DE1E80014",
+    "2E7DB7A7-608E-4041-B45F-00359E0766C6",
+    "23A089B3-EED5-4AC5-B2AB-43E3298C2343",
+    "84EEA114-C6BE-4445-8F90-51D97863E363",
+    "470CB248-E8AC-473C-BB4F-81069A1FE6FD",
+    "E2EA6F47-E678-47FA-8C1B-02A03E825C6E"
+]
+
 utk_path = "/home/w/go/bin/utk"
 uefiextract_path = "./uefiextract"
 ghidra_analyzeheadless_path = "./ghidra_11.1.2_PUBLIC/support/analyzeHeadless"
@@ -80,26 +92,25 @@ def extract_smm_modules(input_firmware):
     all_smm_modules_found =  find_dicts_with_key(parsed_data,"Files")
     
     modules = [x["Header"]["GUID"]["GUID"] for x in all_smm_modules_found if is_smm_module(x)]
-
+    modules = [x for x in modules if x not in ovmf_guids]
 
     return modules
 
 def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
     total_bbl = 0
     for module in smm_modules:
+        print(module)
         
-
         utk_extract_command = [utk_path,input_firmware,"dump",module,"/tmp/smm.ffs"]
         subprocess.run(utk_extract_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
 
-        efi_path_name = "/tmp/smm/" + module
-        uefiextract_command = [uefiextract_path,input_firmware,module,"-o",efi_path_name,"-m","body","-t","0x10"]
-        subprocess.run(uefiextract_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
-
-        efi_file_name = efi_path_name + "/body.bin"
-        num_bbl = count_basic_blocks(efi_file_name)
-        total_bbl += num_bbl
-        print(module,num_bbl)
+        #efi_path_name = "/tmp/smm/" + module
+        #uefiextract_command = [uefiextract_path,input_firmware,module,"-o",efi_path_name,"-m","body","-t","0x10"]
+        #subprocess.run(uefiextract_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
+        #efi_file_name = efi_path_name + "/body.bin"
+        #num_bbl = count_basic_blocks(efi_file_name)
+        #total_bbl += num_bbl
+        #print(num_bbl)
 
         utk_insert_command = [utk_path,ovmf_firmware,"insert_after","TcgMorLockSmm","/tmp/smm.ffs","save",ovmf_firmware]
         subprocess.run(utk_insert_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)

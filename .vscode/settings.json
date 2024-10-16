@@ -3,6 +3,16 @@
         "libafl_qemu.h": "c",
         "pismmcore.h": "c",
         "pismmcommunicationregiontable.h": "c",
-        "ratio": "c"
+        "ratio": "c",
+        "*.inc": "cpp",
+        "hook.h": "c",
+        "osdep.h": "c",
+        "exit.h": "c",
+        "pismmcoreprivatedata.h": "c",
+        "pismmcpucommon.h": "c",
+        "functional": "cpp",
+        "ccexitlib.h": "c",
+        "sstream": "c",
+        "regex": "c"
     }
 }
