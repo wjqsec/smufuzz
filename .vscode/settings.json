@@ -13,6 +13,26 @@
         "functional": "cpp",
         "ccexitlib.h": "c",
         "sstream": "c",
-        "regex": "c"
+        "regex": "c",
+        "internalsmmsavestate.h": "c",
+        "typeinfo": "c",
+        "dxemain.h": "c",
+        "peimain.h": "c",
+        "platform.h": "c",
+        "smmregisterinfoguid.h": "c",
+        "*.idef": "c",
+        "*.def": "c",
+        "SmiDependency.C": "cpp",
+        "memoryallocationlib.h": "c",
+        "thread": "c",
+        "dxeservicestablelib.h": "c",
+        "hoblib.h": "c",
+        "array": "c",
+        "bitset": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "utility": "c",
+        "variablenonvolatile.h": "c",
+        "platforminitlib.h": "c"
     }
 }
