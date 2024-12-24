@@ -33,6 +33,17 @@
         "initializer_list": "c",
         "utility": "c",
         "variablenonvolatile.h": "c",
-        "platforminitlib.h": "c"
+        "platforminitlib.h": "c",
+        "variableparsing.h": "c",
+        "uefibootservicestablelib.h": "c",
+        "smmvariablecommon.h": "c",
+        "firmwarevolumeblock.h": "c",
+        "string": "c",
+        "*.list": "c",
+        "syx-misc.h": "c",
+        "channel-buffer-writeback.h": "c",
+        "vmstate.h": "c",
+        "syx-snapshot.h": "c",
+        "devicepathlib.h": "c"
     }
 }

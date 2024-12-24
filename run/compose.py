@@ -18,22 +18,19 @@ ovmf_guids = [
      "E2EA6F47-E678-47FA-8C1B-02A03E825C6E",
      "60F343E3-2AE2-4AA7-B01E-BF9BD5C04A3B",
      "2D59F041-53A4-40D0-A6CD-844DC0DFEF17"
- ]
+]
 unsupported_guids = [
     # '991611CA-01AC-44A3-9C70-00F24A2B4AD9',   # dxe setvariable return fail  fixed by hooking setgetvariable
     # 'DAEC02CC-92C7-47DD-AE0D-498C204253AE',   # dxe setvariable return fail   fixed by hooking setgetvariable
-    # 'D933DEDE-0260-4E76-A7D9-2F9F2440E5A5'    #get variable not found    fixed by hooking setgetvariable
-    'F8F5C3C3-2EC9-4162-B649-EF41DFE615CD',   # smm getvariable not found  
-    'FD93F9E1-3C73-46E0-B7B8-2BBA3F718F6C',    # cofig table getvariable not found?
-    'F3331DE6-4A55-44E4-B767-7453F7A1A021',   # memory access data fail
-    # '2D1E361C-7B3F-4D15-8B1F-66E551FABDC7',  # search for hob, infinite loop
-    '8F0B5301-C79B-44F1-8FD3-26D73E316700',  # hob guid not found, cmplog?
-    '91D211BF-37C2-495A-8DF7-9546BD2555C0',  # EFI_SM_MONITOR_INIT_PROTOCOL not found
-    
- ]
+    # 'D933DEDE-0260-4E76-A7D9-2F9F2440E5A5'    # get variable not found    fixed by hooking setgetvariable
+    # 'F8F5C3C3-2EC9-4162-B649-EF41DFE615CD',     # smm getvariable not found  
+    # 'FD93F9E1-3C73-46E0-B7B8-2BBA3F718F6C',     # cofig table getvariable not found?
+    # '8F0B5301-C79B-44F1-8FD3-26D73E316700',   # hob guid not found, cmplog?
+    # '91D211BF-37C2-495A-8DF7-9546BD2555C0',     # EFI_SM_MONITOR_INIT_PROTOCOL not found
+]
 use_ovmf_guids = [
    'A3FF0EF5-0C28-42F5-B544-8C7DE1E80014', #dexsmm
-   #'2D59F041-53A4-40D0-A6CD-844DC0DFEF17'  #s3smm save state  try to access sram while outside sram code
+#    '2D59F041-53A4-40D0-A6CD-844DC0DFEF17'  #s3smm save state  try to access sram while outside sram code
  ]
 
 
@@ -94,7 +91,7 @@ def find_dicts_with_key(obj,key_):
 def is_smm_module(module_desc):
     if isinstance(module_desc, dict):
         if "Type" in module_desc:
-            #return module_desc["Type"] == "EFI_FV_FILETYPE_MM_CORE"
+            # return module_desc["Type"] == "EFI_FV_FILETYPE_MM_CORE"
             return module_desc["Type"] == "EFI_FV_FILETYPE_MM" or module_desc["Type"] == "EFI_FV_FILETYPE_MM_CORE"
     return False
 
