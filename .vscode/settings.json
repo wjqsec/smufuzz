@@ -44,6 +44,7 @@
         "channel-buffer-writeback.h": "c",
         "vmstate.h": "c",
         "syx-snapshot.h": "c",
-        "devicepathlib.h": "c"
+        "devicepathlib.h": "c",
+        "variant": "c"
     }
 }

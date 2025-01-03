@@ -118,6 +118,7 @@ def delete_smm_module(firmware,modules):
 
 def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
     total_bbl = 0
+    last_add = ""
     for module in smm_modules:
         print("add " + module)
         
@@ -132,8 +133,12 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
         #num_bbl = count_basic_blocks(efi_file_name)
         #total_bbl += num_bbl
         #print(num_bbl)
-
-        utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe","/tmp/smm.ffs","save",ovmf_firmware]
+        if last_add == "" : 
+            utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe","/tmp/smm.ffs","save",ovmf_firmware]
+        else:
+            utk_insert_command = [utk_path,ovmf_firmware,"insert_after",last_add,"/tmp/smm.ffs","save",ovmf_firmware]
+        last_add = module
+        
         subprocess.run(utk_insert_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
     print("total bbls {}".format(total_bbl))
 def prepare_count_bbl_file():
