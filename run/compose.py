@@ -30,6 +30,7 @@ unsupported_guids = [
 ]
 use_ovmf_guids = [
    'A3FF0EF5-0C28-42F5-B544-8C7DE1E80014', #dexsmm
+   '470CB248-E8AC-473C-BB4F-81069A1FE6FD', #faulttolerantwriteSmm
 #    '2D59F041-53A4-40D0-A6CD-844DC0DFEF17'  #s3smm save state  try to access sram while outside sram code
  ]
 
