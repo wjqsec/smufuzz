@@ -49,7 +49,7 @@ def get_all_smm_modules(firmware):
     with open(firmware + ".report.txt") as f:
         for line in f.readlines():
             if "SMM module" in line or "SMM core" in line:
-                ret.append(line.split("|")[-2].split(" ")[-2])
+                ret.append(line.split("|")[5].split(" ")[2].strip())
     return ret
 
 
@@ -60,27 +60,41 @@ def delete_smm_module(firmware,modules):
         subprocess.run(utk_insert_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
 
 def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
-    if not os.path.exists("/tmp/smm"):
-        os.mkdir("/tmp/smm")
     last_add = ""
+    index = 1
     for module in smm_modules:
-        print("add " + module)
+        print(str(index) + " add " + module)
+        index += 1
         for folder, subs, files in os.walk(input_firmware + ".dump"):
             found_info = False
             for file in files:
-                if os.path.isfile(folder + "info.txt"):
+                if os.path.isfile(folder + "/info.txt"):
                     found_info = True
                     break
             if not found_info:
                 continue
-            with open(folder + "info.txt") as f:
-                if ("File GUID: " + module) in f.read():
+            with open(folder + "/info.txt") as f:
+                content = f.read()
+                if "File GUID: " + module in content and "Type: File" in content:
+                    tmp_module_filename = os.path.join(folder,"module.ffs")
+                    outputf = open(tmp_module_filename, "wb")
+                    headerf = open(os.path.join(folder,"header.bin"), "rb")
+                    bodyf = open(os.path.join(folder,"body.bin"), "rb")
+                    outputf.write(headerf.read()) + outputf.write(bodyf.read())
+                    outputf.close()
+                    headerf.close()
+                    bodyf.close()
                     if last_add == "" : 
-                        utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe",os.path.join(folder,"body.bin"),"save",ovmf_firmware]
+                        utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe",tmp_module_filename,"save",ovmf_firmware]
                     else:
-                        utk_insert_command = [utk_path,ovmf_firmware,"insert_after",last_add,os.path.join(folder,"body.bin"),"save",ovmf_firmware]
-                    last_add = module
-                    subprocess.run(utk_insert_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
+                        utk_insert_command = [utk_path,ovmf_firmware,"insert_after",last_add,tmp_module_filename,"save",ovmf_firmware]
+                    ret = subprocess.run(utk_insert_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    if "FATAL" not in ret.stderr and "FATAL" not in ret.stderr:
+                        last_add = module
+                    else:
+                        print(ret.stderr)
+                        print(ret.stdout)
+
 
 def clean(ovmf_firmware,input_firmware):
     os.remove(ovmf_firmware + ".report.txt")

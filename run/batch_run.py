@@ -28,6 +28,7 @@ smm_fuzz_projs = [
 ]
 
 for smm_fuzz_proj in smm_fuzz_projs:
+    print("Fuzzing: " + smm_fuzz_proj[0])
     shutil.copyfile(ovmf_bin, smm_fuzz_proj[0] + "OVMF_CODE.fd")
     compose_command = ["python3", compose_bin, smm_fuzz_proj[1], smm_fuzz_proj[0] + "OVMF_CODE.fd"]
     subprocess.call(compose_command, text=True)
@@ -35,7 +36,7 @@ for smm_fuzz_proj in smm_fuzz_projs:
 wait_f = []
 for smm_fuzz_dir in smm_fuzz_projs: 
     f = open(smm_fuzz_dir[0] + "fuzzer.log", "w")
-    fuzz_command = [fuzz_bin, "--proj",smm_fuzz_dir[0],"fuzz","--fuzz-time","10h" ]
+    fuzz_command = [fuzz_bin, "--proj",smm_fuzz_dir[0],"fuzz","--fuzz-time","10s" ]
     env_vars = os.environ.copy()
     env_vars["RUST_LOG"] = "info"
     result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars )
