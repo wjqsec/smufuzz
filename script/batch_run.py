@@ -10,6 +10,7 @@ compose_bin = "/home/w/hd/uefi_fuzz/fuzzer/run/compose.py"
 ovmf_bin = "/home/w/hd/uefi_fuzz/fuzzer/edk2/Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd"
 #alien_r3  alien_x51  asus_p453  asus_un65u  game_x570  game_z690  hp_20  hp_obelisk  hp_z2  hp_z440  think_m700  think_p900  think_s30  think_x1
 
+
 smm_fuzz_projs = [
 ["/home/w/hd/uefi_fuzz/experiments/rsfuzzer/alien_r3/","/home/w/hd/uefi_fuzz/experiments/rsfuzzer/alien_r3/Alienware 13 R3-alienware_13_r3_1.13.0.rom"],
 ["/home/w/hd/uefi_fuzz/experiments/rsfuzzer/alien_x51/","/home/w/hd/uefi_fuzz/experiments/rsfuzzer/alien_x51/Alienware X51 R3-dell_alienware_x51_r3"],
