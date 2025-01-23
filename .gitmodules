@@ -4,7 +4,4 @@
 [submodule "edk2"]
   path = edk2
   url = https://github.com/wjqsec/edk2.git
-[submodule "qemu-libafl-bridge"]
-  path = qemu-libafl-bridge
-  url = https://github.com/wjqsec/qemu-libafl-bridge.git
 
