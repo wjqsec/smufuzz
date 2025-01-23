@@ -63,7 +63,7 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
     last_add = ""
     index = 1
     for module in smm_modules:
-        print(str(index) + " add " + module)
+        print(module)
         index += 1
         for folder, subs, files in os.walk(input_firmware + ".dump"):
             found_info = False
@@ -94,6 +94,7 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
                     else:
                         print(ret.stderr)
                         print(ret.stdout)
+    print("in total " + str(len(smm_modules)))
 
 
 def clean(ovmf_firmware,input_firmware):
@@ -115,4 +116,7 @@ if __name__ == "__main__":
     delete_smm_module(ovmf_path,ovmf_delete_modules)
     vendor_smm_modules = [x for x in vendor_smm_modules if x not in unsupported_guids and x not in use_ovmf_guids]
     insert_smm_modules(ovmf_path,vendor_firmware_path,vendor_smm_modules)
+    with open(sys.argv[3],"w") as f:
+        for module in vendor_smm_modules:
+            f.write(module + "\n")
     clean(vendor_firmware_path, ovmf_path)
