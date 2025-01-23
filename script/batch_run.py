@@ -30,7 +30,7 @@ smm_fuzz_projs = [
 for smm_fuzz_proj in smm_fuzz_projs:
     print("Fuzzing: " + smm_fuzz_proj[0])
     shutil.copyfile(ovmf_bin, smm_fuzz_proj[0] + "OVMF_CODE.fd")
-    compose_command = ["python3", compose_bin, smm_fuzz_proj[1], smm_fuzz_proj[0] + "OVMF_CODE.fd"]
+    compose_command = ["python3", compose_bin, smm_fuzz_proj[1], smm_fuzz_proj[0] + "OVMF_CODE.fd", smm_fuzz_proj[0] + "module.info"]
     subprocess.call(compose_command, text=True)
 
 wait_f = []
