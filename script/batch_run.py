@@ -5,9 +5,10 @@ import shutil
 import os
 import r2pipe
 
-fuzz_bin = "/home/w/hd/uefi_fuzz/fuzzer/LibAFL/target/release/qemu_smm"
-compose_bin = "/home/w/hd/uefi_fuzz/fuzzer/run/compose.py"
-ovmf_bin = "/home/w/hd/uefi_fuzz/fuzzer/edk2/Build/OvmfX64/RELEASE_GCC5/FV/OVMF_CODE.fd"
+fuzz_bin = "../LibAFL/target/release/qemu_smm"
+compose_bin = "./compose.py"
+ovmf_bin = "../edk2/Build/OvmfX64/DEBUG_GCC5/FV/OVMF_CODE.fd"
+ovmf_vars = "../edk2/Build/OvmfX64/DEBUG_GCC5/FV/OVMF_VARS.fd"
 #alien_r3  alien_x51  asus_p453  asus_un65u  game_x570  game_z690  hp_20  hp_obelisk  hp_z2  hp_z440  think_m700  think_p900  think_s30  think_x1
 
 
@@ -31,6 +32,7 @@ smm_fuzz_projs = [
 for smm_fuzz_proj in smm_fuzz_projs:
     print("Fuzzing: " + smm_fuzz_proj[0])
     shutil.copyfile(ovmf_bin, smm_fuzz_proj[0] + "OVMF_CODE.fd")
+    shutil.copyfile(ovmf_vars, smm_fuzz_proj[0] + "OVMF_VARS.fd")
     compose_command = ["python3", compose_bin, smm_fuzz_proj[1], smm_fuzz_proj[0] + "OVMF_CODE.fd", smm_fuzz_proj[0] + "module.info"]
     subprocess.call(compose_command, text=True)
 

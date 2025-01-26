@@ -41,11 +41,6 @@ uefiextract_path = "./uefiextract"
 
 def get_all_smm_modules(firmware):
     ret = []
-    firmware_filename = os.path.basename(firmware)
-    firmware_filepath = os.path.dirname(firmware)
-    extract_command = [uefiextract_path,firmware,"all"]
-
-    result = subprocess.run(extract_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
     with open(firmware + ".report.txt") as f:
         for line in f.readlines():
             if "SMM module" in line or "SMM core" in line:
@@ -59,41 +54,99 @@ def delete_smm_module(firmware,modules):
         utk_insert_command = [utk_path,firmware,"remove_pad",module,"save",firmware]
         subprocess.run(utk_insert_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
 
+
+
+def get_info(filename):
+    with open(filename,"r") as f:
+        return f.read()
+
+def compose_body(dirname):
+    info = get_info(os.path.join(dirname, "info.txt"))
+    if "Type: Section" in info:
+        if "Subtype: Compressed" in info:
+            content = bytes()
+            for file in os.listdir(dirname):
+                if os.path.isdir(os.path.join(dirname, file)):
+                    content += compose_body(os.path.join(dirname, file))
+            return content
+        else:
+            header_f = open(os.path.join(dirname, "header.bin"),"rb")
+            body_f = open(os.path.join(dirname, "body.bin"),"rb")
+
+            header = header_f.read()
+            body = body_f.read()
+
+            content_len = len(header) + len(body)
+
+            align_content_len = 4 - ( content_len % 4)
+
+            total_len = content_len + align_content_len
+
+            total_len_bytes = total_len.to_bytes(4, "little")
+            header_bytearray = bytearray(header)
+            header_bytearray[:3] = total_len_bytes[:-1]
+
+            content = bytes(header_bytearray) + body
+
+            content += (int(0).to_bytes(1, "little")) * align_content_len
+            header_f.close()
+            body_f.close()
+            return content
+    elif "Type: File" in info:
+        header_f = open(os.path.join(dirname, "header.bin"),"rb")
+        content = bytes()
+        body = bytes()
+        header = header_f.read()
+        header_f.close()
+        for file in os.listdir(dirname):
+            if os.path.isdir(os.path.join(dirname, file)):
+                body += compose_body(os.path.join(dirname, file))
+        total_len = len(header) + len(body)
+        total_len_bytes = total_len.to_bytes(4, "little")
+        header_bytearray = bytearray(header)
+        header_bytearray[20:23] = total_len_bytes[:-1]
+        content = bytes(header_bytearray) + body
+        return content
+    return bytes()
+
+
+
+
 def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
     last_add = ""
-    index = 1
     for module in smm_modules:
         print(module)
-        index += 1
         for folder, subs, files in os.walk(input_firmware + ".dump"):
-            found_info = False
-            for file in files:
-                if os.path.isfile(folder + "/info.txt"):
-                    found_info = True
-                    break
-            if not found_info:
+            if not os.path.isfile(folder + "/info.txt"):
                 continue
             with open(folder + "/info.txt") as f:
                 content = f.read()
                 if "File GUID: " + module in content and "Type: File" in content:
-                    tmp_module_filename = os.path.join(folder,"module.ffs")
-                    outputf = open(tmp_module_filename, "wb")
-                    headerf = open(os.path.join(folder,"header.bin"), "rb")
-                    bodyf = open(os.path.join(folder,"body.bin"), "rb")
-                    outputf.write(headerf.read()) + outputf.write(bodyf.read())
-                    outputf.close()
-                    headerf.close()
-                    bodyf.close()
+                    containt_compressed_section = False
+                    for file in os.listdir(folder): 
+                        if "Compressed section" in file:
+                            containt_compressed_section = True
+                    if containt_compressed_section:
+                        selfcompose_bin = compose_body(folder)
+                        module_filename = os.path.join(folder,"module_com.ffs")
+                        outputf2 = open(module_filename, "wb")
+                        outputf2.write(selfcompose_bin)
+                        outputf2.close()
+                    else:
+                        module_filename = os.path.join(folder,"module.ffs")
+                        outputf = open(module_filename, "wb")
+                        headerf = open(os.path.join(folder,"header.bin"), "rb")
+                        bodyf = open(os.path.join(folder,"body.bin"), "rb")
+                        outputf.write(headerf.read()) + outputf.write(bodyf.read())
+                        outputf.close()
+                        headerf.close()
+                        bodyf.close()
+
                     if last_add == "" : 
-                        utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe",tmp_module_filename,"save",ovmf_firmware]
+                        utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe",module_filename,"save",ovmf_firmware]
                     else:
-                        utk_insert_command = [utk_path,ovmf_firmware,"insert_after",last_add,tmp_module_filename,"save",ovmf_firmware]
-                    ret = subprocess.run(utk_insert_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                    if "FATAL" not in ret.stderr and "FATAL" not in ret.stderr:
-                        last_add = module
-                    else:
-                        print(ret.stderr)
-                        print(ret.stdout)
+                        utk_insert_command = [utk_path,ovmf_firmware,"insert_after",last_add,module_filename,"save",ovmf_firmware]
+                    subprocess.run(utk_insert_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     print("in total " + str(len(smm_modules)))
 
 
@@ -116,7 +169,8 @@ if __name__ == "__main__":
     delete_smm_module(ovmf_path,ovmf_delete_modules)
     vendor_smm_modules = [x for x in vendor_smm_modules if x not in unsupported_guids and x not in use_ovmf_guids]
     insert_smm_modules(ovmf_path,vendor_firmware_path,vendor_smm_modules)
-    with open(sys.argv[3],"w") as f:
-        for module in vendor_smm_modules:
-            f.write(module + "\n")
+    if len(sys.argv) > 3:
+        with open(sys.argv[3],"w") as f:
+            for module in vendor_smm_modules:
+                f.write(module + "\n")
     clean(vendor_firmware_path, ovmf_path)
