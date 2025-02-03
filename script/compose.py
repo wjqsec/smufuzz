@@ -41,6 +41,8 @@ uefiextract_path = "./uefiextract"
 
 def get_all_smm_modules(firmware):
     ret = []
+    extract_command = [uefiextract_path,firmware,"all"]
+    subprocess.run(extract_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
     with open(firmware + ".report.txt") as f:
         for line in f.readlines():
             if "SMM module" in line or "SMM core" in line:
