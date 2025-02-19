@@ -47,6 +47,10 @@
         "devicepathlib.h": "c",
         "variant": "c",
         "dxesmmreadytolock.h": "c",
-        "loadedimage.h": "c"
+        "loadedimage.h": "c",
+        "treeprotocol.h": "c",
+        "tcgservice.h": "c",
+        "pismm.h": "c",
+        "memoryprofilelib.h": "c"
     }
 }

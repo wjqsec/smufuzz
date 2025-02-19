@@ -6,7 +6,7 @@ for i in range(len(sys.argv) - 1):
     with open(sys.argv[1+i],"r") as f:
         start_count = False
         for line in f.readlines():
-            if "Evaluate SMM DEPEX for FFS" in line:
+            if "Evaluate SMM DEPEX for FFS" in line and "E2EA6F47-E678-47FA-8C1B-02A03E825C6E" not in line:
                 start_count = True
                 continue
             if "SmmCoreEntry end" in line or "Evaluate DXE DEPEX for FFS" in line:

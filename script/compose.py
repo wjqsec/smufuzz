@@ -28,13 +28,17 @@ unsupported_guids = [
     # 'FD93F9E1-3C73-46E0-B7B8-2BBA3F718F6C',     # cofig table getvariable not found?
     # '8F0B5301-C79B-44F1-8FD3-26D73E316700',   # hob guid not found, cmplog?
     # '91D211BF-37C2-495A-8DF7-9546BD2555C0',     # EFI_SM_MONITOR_INIT_PROTOCOL not found
+    # '4A6D890F-93C3-4B6D-A67D-5F2C4DCE347B', # Runtimesmm
 ]
 use_ovmf_guids = [
    'A3FF0EF5-0C28-42F5-B544-8C7DE1E80014', #dexsmm
    '470CB248-E8AC-473C-BB4F-81069A1FE6FD', #faulttolerantwriteSmm
+   '23A089B3-EED5-4AC5-B2AB-43E3298C2343', #variablesmm
 #    '2D59F041-53A4-40D0-A6CD-844DC0DFEF17'  #s3smm save state  try to access sram while outside sram code
 ]
-
+remove_ovmf_guid = [
+    'E2EA6F47-E678-47FA-8C1B-02A03E825C6E'
+]
 
 utk_path = "./utk"
 uefiextract_path = "./uefiextract"
@@ -45,7 +49,7 @@ def get_all_smm_modules(firmware):
     subprocess.run(extract_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
     with open(firmware + ".report.txt") as f:
         for line in f.readlines():
-            if "SMM module" in line or "SMM core" in line:
+            if "SMM module" in line or "SMM core" in line or "Combined SMM/DXE" in line:
                 ret.append(line.split("|")[5].split(" ")[2].strip())
     return ret
 
@@ -168,6 +172,7 @@ if __name__ == "__main__":
     vendor_smm_modules = get_all_smm_modules(vendor_firmware_path)
     ovmf_modules = get_all_smm_modules(ovmf_path)
     ovmf_delete_modules = [x for x in ovmf_modules if x in vendor_smm_modules and x not in use_ovmf_guids]
+    ovmf_delete_modules += remove_ovmf_guid
     delete_smm_module(ovmf_path,ovmf_delete_modules)
     vendor_smm_modules = [x for x in vendor_smm_modules if x not in unsupported_guids and x not in use_ovmf_guids]
     insert_smm_modules(ovmf_path,vendor_firmware_path,vendor_smm_modules)
