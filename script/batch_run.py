@@ -68,6 +68,7 @@ for smm_fuzz_proj in smm_fuzz_projs:
     compose_command = ["python3", compose_bin, smm_fuzz_proj[0] + smm_fuzz_proj[1], smm_fuzz_proj[0] + "OVMF_CODE.fd", smm_fuzz_proj[0] + "module.info"]
     subprocess.call(compose_command, text=True)
     print("Embedding over")
+
     f = open(smm_fuzz_proj[0] + "fuzzer.log", "w")
     fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0],"fuzz","--fuzz-time","20s" ]
     env_vars = os.environ.copy()
