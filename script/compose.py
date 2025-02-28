@@ -53,6 +53,15 @@ def get_all_smm_modules(firmware):
                 ret.append(line.split("|")[5].split(" ")[2].strip())
     return ret
 
+def get_all_dxe_modules(firmware):
+    ret = []
+    extract_command = [uefiextract_path,firmware,"all"]
+    subprocess.run(extract_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, text=True)
+    with open(firmware + ".report.txt") as f:
+        for line in f.readlines():
+            if "DXE driver" in line:
+                ret.append(line.split("|")[5].split(" ")[2].strip())
+    return ret
 
 def delete_smm_module(firmware,modules):
     for module in modules:
@@ -120,12 +129,15 @@ def compose_body(dirname):
 
 def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
     last_add = ""
+    proj_path = os.path.dirname(ovmf_firmware)
+    efis_path = os.path.join(proj_path,"efis")
+    os.makedirs(efis_path, exist_ok=True)
     for module in smm_modules:
         print(module)
         for folder, subs, files in os.walk(input_firmware + ".dump"):
-            if not os.path.isfile(folder + "/info.txt"):
+            if not os.path.isfile(os.path.join(folder,"info.txt")):
                 continue
-            with open(folder + "/info.txt") as f:
+            with open(os.path.join(folder,"info.txt")) as f:
                 content = f.read()
                 if "File GUID: " + module in content and "Type: File" in content:
                     containt_compressed_section = False
@@ -148,6 +160,11 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
                         headerf.close()
                         bodyf.close()
 
+                        for folder, subs, files in os.walk(folder):
+                            if os.path.isdir(folder):
+                                if "PE32 image section" in folder:
+                                    shutil.copyfile(os.path.join(folder,"body.bin"), os.path.join(efis_path,module+".efi"))
+
                     if last_add == "" : 
                         utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe",module_filename,"save",ovmf_firmware]
                     else:
@@ -169,15 +186,16 @@ def clean(ovmf_firmware,input_firmware):
 if __name__ == "__main__":
     ovmf_path = sys.argv[2]
     vendor_firmware_path = sys.argv[1]
+    proj_path = os.path.dirname(ovmf_path)
     vendor_smm_modules = get_all_smm_modules(vendor_firmware_path)
     ovmf_modules = get_all_smm_modules(ovmf_path)
+    ovmf_dxe_modules = []
     ovmf_delete_modules = [x for x in ovmf_modules if x in vendor_smm_modules and x not in use_ovmf_guids]
     ovmf_delete_modules += remove_ovmf_guid
     delete_smm_module(ovmf_path,ovmf_delete_modules)
-    vendor_smm_modules = [x for x in vendor_smm_modules if x not in unsupported_guids and x not in use_ovmf_guids]
+    vendor_smm_modules = [x for x in vendor_smm_modules if x not in unsupported_guids and x not in use_ovmf_guids and x not in ovmf_dxe_modules]
     insert_smm_modules(ovmf_path,vendor_firmware_path,vendor_smm_modules)
-    if len(sys.argv) > 3:
-        with open(sys.argv[3],"w") as f:
-            for module in vendor_smm_modules:
-                f.write(module + "\n")
+    with open(os.path.join(proj_path,"module.info"),"w") as f:
+        for module in vendor_smm_modules:
+            f.write(module + "\n")
     clean(vendor_firmware_path, ovmf_path)

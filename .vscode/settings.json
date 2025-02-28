@@ -51,6 +51,7 @@
         "treeprotocol.h": "c",
         "tcgservice.h": "c",
         "pismm.h": "c",
-        "memoryprofilelib.h": "c"
+        "memoryprofilelib.h": "c",
+        "dxeserviceslib.h": "c"
     }
 }
