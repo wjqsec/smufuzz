@@ -19,7 +19,7 @@ ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC5/FV/OVMF_VARS.fd"
 prefix = "/home/w/hd/uefi_fuzz/experiments"
 
 smm_fuzz_projs = [
-    
+
 [prefix + "/rsfuzzer/alien_r3/","Alienware 13 R3-alienware_13_r3_1.13.0.rom"],
 [prefix + "/rsfuzzer/alien_x51/","Alienware X51 R3-dell_alienware_x51_r3"],
 [prefix + "/rsfuzzer/asus_p453/","ASUS P453UJ-P453UJAS.311"],
@@ -74,47 +74,51 @@ smm_fuzz_projs = [
 ]
 wait_f = []
 
+'''
+smm_fuzz_projs_tmp = []
+for proj in smm_fuzz_projs:
+    for i in range(5):
+        smm_fuzz_projs_tmp.append(proj[0], i+1)
+while True:
+    while len(wait_f) < psutil.cpu_count(logical = False):
+        if len(smm_fuzz_projs_tmp) == 0:
+            break
+        smm_fuzz_proj = smm_fuzz_projs_tmp.pop(0)
+        tag = str(smm_fuzz_proj[1])
+        os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
+        f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0],"fuzz","--fuzz-time","1d","--use_snapshot","--tag",tag]
+        env_vars = os.environ.copy()
+        env_vars["RUST_LOG"] = "info"
+        result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
+        wait_f.append([result,smm_fuzz_proj])
+    while True:
+        time.sleep(3)
+        to_exit = []
+        to_terminate = []
+        for f in wait_f:
+            if f[0].poll() is not None:
+                f[0].wait()
+                to_exit.append(f)
+                if f[0].returncode != 0:
+                   smm_fuzz_projs.insert(0, f[1])  
+            else:
+                p = psutil.Process(f[0].pid)
+                cpu_usage = p.cpu_percent(interval=1)
+                if cpu_usage < 10:
+                    f[0].kill()
+                    to_terminate.append(f)
+                    smm_fuzz_projs.insert(0, f[1])  
+        for f in to_exit:
+            wait_f.remove(f)
+        for f in to_terminate:
+            wait_f.remove(f)
+        if len(smm_fuzz_projs_tmp) == 0 and len(wait_f) == 0:
+            exit(0)
+        if len(smm_fuzz_projs_tmp) != 0:
+            break
 
-# smm_fuzz_projs_tmp = []
-# for proj in smm_fuzz_projs:
-#     for i in range(5):
-#         smm_fuzz_projs_tmp.append(proj[0], i+1)
-# while True:
-#     while len(wait_f) < psutil.cpu_count(logical = False):
-#         if len(smm_fuzz_projs_tmp) == 0:
-#             break
-#         smm_fuzz_proj = smm_fuzz_projs_tmp.pop(0)
-#         tag = str(smm_fuzz_proj[1])
-#         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
-#         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-#         fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0],"fuzz","--fuzz-time","1d","--use_snapshot","--tag",tag]
-#         env_vars = os.environ.copy()
-#         env_vars["RUST_LOG"] = "info"
-#         result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
-#         wait_f.append([result,smm_fuzz_proj])
-#     while True:
-#         time.sleep(3)
-#         to_exit = []
-#         to_terminate = []
-#         for f in wait_f:
-#             if f[0].poll() is not None:
-#                 f[0].wait()
-#                 to_exit.append(f)
-#             else:
-#                 p = psutil.Process(f[0].pid)
-#                 cpu_usage = p.cpu_percent(interval=1)
-#                 if cpu_usage < 10:
-#                     f[0].kill()
-#                     to_terminate.append(f)
-#                     smm_fuzz_projs_tmp.append(f[1])  
-#         for f in to_exit:
-#             wait_f.remove(f)
-#         for f in to_terminate:
-#             wait_f.remove(f)
-#         if len(smm_fuzz_projs_tmp) == 0 and len(wait_f) == 0:
-#             exit(0)
-#         if len(smm_fuzz_projs_tmp) != 0:
-#             break
+'''
 
 
 while True:
@@ -145,14 +149,14 @@ while True:
                 f[0].wait()
                 to_exit.append(f)
                 if f[0].returncode != 0:
-                    smm_fuzz_projs.append(f[1])  
+                    smm_fuzz_projs.insert(0, f[1])  
             else:
                 p = psutil.Process(f[0].pid)
                 cpu_usage = p.cpu_percent(interval=1)
                 if cpu_usage < 10:
                     f[0].kill()
                     to_terminate.append(f)
-                    smm_fuzz_projs.append(f[1])  
+                    smm_fuzz_projs.insert(0, f[1])  
         for f in to_exit:
             wait_f.remove(f)
         for f in to_terminate:
