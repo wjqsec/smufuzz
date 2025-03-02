@@ -34,7 +34,6 @@ use_ovmf_guids = [
    'A3FF0EF5-0C28-42F5-B544-8C7DE1E80014', #dexsmm
    '470CB248-E8AC-473C-BB4F-81069A1FE6FD', #faulttolerantwriteSmm
    '23A089B3-EED5-4AC5-B2AB-43E3298C2343', #variablesmm
-#    '2D59F041-53A4-40D0-A6CD-844DC0DFEF17'  #s3smm save state  try to access sram while outside sram code
 ]
 remove_ovmf_guid = [
     'E2EA6F47-E678-47FA-8C1B-02A03E825C6E'
@@ -189,6 +188,7 @@ if __name__ == "__main__":
     proj_path = os.path.dirname(ovmf_path)
     vendor_smm_modules = get_all_smm_modules(vendor_firmware_path)
     ovmf_modules = get_all_smm_modules(ovmf_path)
+    # ovmf_dxe_modules = get_all_dxe_modules(ovmf_path)
     ovmf_dxe_modules = []
     ovmf_delete_modules = [x for x in ovmf_modules if x in vendor_smm_modules and x not in use_ovmf_guids]
     ovmf_delete_modules += remove_ovmf_guid
