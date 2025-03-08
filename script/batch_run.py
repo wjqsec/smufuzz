@@ -74,18 +74,25 @@ smm_fuzz_projs = [
 ]
 wait_f = []
 
-'''
+
 smm_fuzz_projs_tmp = []
 for proj in smm_fuzz_projs:
+    print("Fuzzing: " + proj[0])
+    shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
+    shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
+    compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
+    subprocess.call(compose_command, text=True)
+    print("Embedding over")
     for i in range(5):
-        smm_fuzz_projs_tmp.append([proj[0], i+1])
+        smm_fuzz_projs_tmp.append([proj[0],proj[1], i+1])
+
 while True:
     while len(wait_f) < psutil.cpu_count(logical = False) and len(smm_fuzz_projs_tmp) != 0:
         smm_fuzz_proj = smm_fuzz_projs_tmp.pop(0)
         tag = str(smm_fuzz_proj[1])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0],"fuzz","--fuzz-time","1d","--use-snapshot","--tag",tag]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0],"fuzz","--fuzz-time","1d","--tag",tag]
         env_vars = os.environ.copy()
         env_vars["RUST_LOG"] = "info"
         print(fuzz_command)
@@ -116,53 +123,3 @@ while True:
             exit(0)
         if len(smm_fuzz_projs_tmp) != 0:
             break
-'''
-
-
-'''
-while True:
-    
-    while len(wait_f) < psutil.cpu_count(logical = False) and len(smm_fuzz_projs) != 0:
-        tag = "test_fuzz"
-        smm_fuzz_proj = smm_fuzz_projs.pop(0)
-        print("Fuzzing: " + smm_fuzz_proj[0])
-        shutil.copyfile(ovmf_bin, os.path.join(smm_fuzz_proj[0], "OVMF_CODE.fd"))
-        shutil.copyfile(ovmf_vars, os.path.join(smm_fuzz_proj[0], "OVMF_VARS.fd"))
-        compose_command = ["python3", compose_bin, os.path.join(smm_fuzz_proj[0], smm_fuzz_proj[1]), os.path.join(smm_fuzz_proj[0], "OVMF_CODE.fd")]
-        subprocess.call(compose_command, text=True)
-        print("Embedding over")
-
-        # os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
-        # f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        # fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0],"fuzz","--fuzz-time","20s","--init-phase-timeout-time","2m","--tag",tag]
-        # env_vars = os.environ.copy()
-        # env_vars["RUST_LOG"] = "info"
-        # result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars )
-        # wait_f.append([result,smm_fuzz_proj])
-
-    while True:
-        time.sleep(3)
-        to_exit = []
-        to_terminate = []
-        for f in wait_f:
-            if f[0].poll() is not None:
-                f[0].wait()
-                to_exit.append(f)
-                if f[0].returncode != 0:
-                    smm_fuzz_projs.insert(0, f[1])  
-            else:
-                p = psutil.Process(f[0].pid)
-                cpu_usage = p.cpu_percent(interval=1)
-                if cpu_usage < 10:
-                    f[0].kill()
-                    to_terminate.append(f)
-                    smm_fuzz_projs.insert(0, f[1])  
-        for f in to_exit:
-            wait_f.remove(f)
-        for f in to_terminate:
-            wait_f.remove(f)
-        if len(smm_fuzz_projs) == 0 and len(wait_f) == 0:
-            exit(0)
-        if len(smm_fuzz_projs) != 0:
-            break
-'''
