@@ -77,6 +77,8 @@ wait_f = []
 
 
 def sigint_handler(signum, frame):
+    if len(wait_f) == 0:
+        exit(0)
     for f in wait_f:
         os.kill(f[0].pid, signal.SIGINT)
 signal.signal(signal.SIGINT, sigint_handler)  
