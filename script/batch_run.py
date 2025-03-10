@@ -81,7 +81,7 @@ def sigint_handler(signum, frame):
         exit(0)
     for f in wait_f:
         os.kill(f[0].pid, signal.SIGINT)
-signal.signal(signal.SIGINT, sigint_handler)  
+
 
 smm_fuzz_projs_tmp = []
 for proj in smm_fuzz_projs:
@@ -89,11 +89,17 @@ for proj in smm_fuzz_projs:
     shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
     shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
     compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
-    subprocess.call(compose_command, text=True)
+    result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    wait_f.append([result,0])
     print("Embedding over")
     for i in range(1):
         smm_fuzz_projs_tmp.append([proj[0],proj[1], i+1])
+for f in wait_f:
+    f[0].wait()
+wait_f.clear()
 
+
+signal.signal(signal.SIGINT, sigint_handler)  
 while True:
     while len(wait_f) < psutil.cpu_count(logical = False) and len(smm_fuzz_projs_tmp) != 0:
         smm_fuzz_proj = smm_fuzz_projs_tmp.pop(0)
