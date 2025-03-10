@@ -52,6 +52,11 @@
         "tcgservice.h": "c",
         "pismm.h": "c",
         "memoryprofilelib.h": "c",
-        "dxeserviceslib.h": "c"
+        "dxeserviceslib.h": "c",
+        "basememorylib.h": "c",
+        "uefi.h": "c",
+        "smmcommunication.h": "c",
+        "smifuzz.h": "c",
+        "smmfuzzprotocol.h": "c"
     }
 }
