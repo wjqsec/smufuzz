@@ -18,7 +18,7 @@ ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
 ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 
 prefix = "/home/w/sd/smm_fuzz/exp2"
-fuzz_run_time = "1d"
+fuzz_run_time = "3h"
 fuzz_runs = 1
 
 smm_fuzz_projs = [
@@ -75,37 +75,45 @@ smm_fuzz_projs = [
 # [prefix + "/exp/microsoft_surfacepro_10_for_business/","microsoft_surfacepro_10_for_business.bin"], # no smm modules
 
 ]
-wait_f = []
-smm_fuzz_projs_tmp = []
+running_jobs = []
+waiting_jobs = []
 
 def sigint_handler(signum, frame):
-    if len(wait_f) == 0:
-        exit(0)
-    for f in wait_f:
+    global waiting_jobs
+    global running_jobs
+    for f in running_jobs:
         os.kill(f[0].pid, signal.SIGINT)
-    smm_fuzz_projs_tmp.clear()
+    waiting_jobs.clear()
 
+def is_process_deadlock(proc):
+    for i in range(5):
+        p = psutil.Process(proc.pid)
+        cpu_usage = p.cpu_percent(interval=1)
+        if cpu_usage > 50:
+            return False
+        time.sleep(5)
+    return True
 
 
 for proj in smm_fuzz_projs:
     print("Fuzzing: " + proj[0])
-    shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
-    shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
-    compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
-    result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    wait_f.append([result,0])
+    # shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
+    # shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
+    # compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
+    # result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # running_jobs.append([result,0])
     print("Embedding over")
     for i in range(fuzz_runs):
-        smm_fuzz_projs_tmp.append([proj[0],proj[1], i+1])
-for f in wait_f:
+        waiting_jobs.append([proj[0],proj[1], i+1])
+for f in running_jobs:
     f[0].wait()
-wait_f.clear()
+running_jobs.clear()
 
 
 signal.signal(signal.SIGINT, sigint_handler)  
 while True:
-    while len(wait_f) < psutil.cpu_count(logical = False) and len(smm_fuzz_projs_tmp) != 0:
-        smm_fuzz_proj = smm_fuzz_projs_tmp.pop(0)
+    while len(running_jobs) < psutil.cpu_count(logical = False) and len(waiting_jobs) != 0:
+        smm_fuzz_proj = waiting_jobs.pop(0)
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
@@ -113,29 +121,28 @@ while True:
         env_vars = os.environ.copy()
         env_vars["RUST_LOG"] = "info"
         result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
-        wait_f.append([result,smm_fuzz_proj])
+        running_jobs.append([result,smm_fuzz_proj])
+        while True:
+            p = psutil.Process(result.pid)
+            cpu_usage = p.cpu_percent(interval=1)
+            if cpu_usage > 50:
+                break
     while True:
-        time.sleep(3)
+        time.sleep(5)
         to_exit = []
-        to_terminate = []
-        for f in wait_f:
+        for f in running_jobs:
             if f[0].poll() is not None:
                 f[0].wait()
                 to_exit.append(f)
                 if f[0].returncode != 10:
-                   smm_fuzz_projs_tmp.insert(0, f[1])  
-            else:
-                p = psutil.Process(f[0].pid)
-                cpu_usage = p.cpu_percent(interval=10)
-                if cpu_usage < 10:
-                    f[0].kill()
-                    to_terminate.append(f)
-                    smm_fuzz_projs_tmp.insert(0, f[1])  
+                   waiting_jobs.insert(0, f[1])  
+            elif is_process_deadlock(f[0]):
+                f[0].kill()
+                to_exit.append(f)
+                waiting_jobs.insert(0, f[1])  
         for f in to_exit:
-            wait_f.remove(f)
-        for f in to_terminate:
-            wait_f.remove(f)
-        if len(smm_fuzz_projs_tmp) == 0 and len(wait_f) == 0:
+            running_jobs.remove(f)
+        if len(waiting_jobs) == 0 and len(running_jobs) == 0:
             exit(0)
-        if len(smm_fuzz_projs_tmp) != 0:
+        if len(waiting_jobs) != 0:
             break
