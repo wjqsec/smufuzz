@@ -18,6 +18,8 @@ ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
 ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 
 prefix = "/home/w/sd/smm_fuzz/exp2"
+fuzz_run_time = "1d"
+fuzz_runs = 1
 
 smm_fuzz_projs = [
 
@@ -93,7 +95,7 @@ for proj in smm_fuzz_projs:
     result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     wait_f.append([result,0])
     print("Embedding over")
-    for i in range(1):
+    for i in range(fuzz_runs):
         smm_fuzz_projs_tmp.append([proj[0],proj[1], i+1])
 for f in wait_f:
     f[0].wait()
@@ -107,7 +109,7 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time","3h"]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time]
         env_vars = os.environ.copy()
         env_vars["RUST_LOG"] = "info"
         result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
