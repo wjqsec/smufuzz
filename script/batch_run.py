@@ -17,7 +17,7 @@ compose_bin = "./compose.py"
 ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
 ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 
-prefix = "/home/w/hd/uefi_fuzz/experiments"
+prefix = "/home/w/sd/smm_fuzz/exp2"
 
 smm_fuzz_projs = [
 
@@ -74,16 +74,17 @@ smm_fuzz_projs = [
 
 ]
 wait_f = []
-
+smm_fuzz_projs_tmp = []
 
 def sigint_handler(signum, frame):
     if len(wait_f) == 0:
         exit(0)
     for f in wait_f:
         os.kill(f[0].pid, signal.SIGINT)
+    smm_fuzz_projs_tmp.clear()
 
 
-smm_fuzz_projs_tmp = []
+
 for proj in smm_fuzz_projs:
     print("Fuzzing: " + proj[0])
     shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
@@ -106,7 +107,7 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time","2h"]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time","3h"]
         env_vars = os.environ.copy()
         env_vars["RUST_LOG"] = "info"
         result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
