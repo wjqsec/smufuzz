@@ -86,10 +86,10 @@ def sigint_handler(signum, frame):
     waiting_jobs.clear()
 
 def is_process_deadlock(proc):
+    p = psutil.Process(proc.pid)
     for i in range(5):
-        p = psutil.Process(proc.pid)
         cpu_usage = p.cpu_percent(interval=1)
-        if cpu_usage > 50:
+        if cpu_usage > 20 or proc.poll() is not None:
             return False
         time.sleep(5)
     return True
@@ -111,9 +111,11 @@ running_jobs.clear()
 
 
 signal.signal(signal.SIGINT, sigint_handler)  
+avaliable_cpus = list(range(psutil.cpu_count(logical = False)))
 while True:
-    while len(running_jobs) < psutil.cpu_count(logical = False) and len(waiting_jobs) != 0:
+    while len(avaliable_cpus) !=0 and len(waiting_jobs) != 0:
         smm_fuzz_proj = waiting_jobs.pop(0)
+        avaliable_cpu = avaliable_cpus.pop(0)
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
@@ -121,7 +123,8 @@ while True:
         env_vars = os.environ.copy()
         env_vars["RUST_LOG"] = "info"
         result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
-        running_jobs.append([result,smm_fuzz_proj])
+        # psutil.Process(result.pid).cpu_affinity([avaliable_cpu])
+        running_jobs.append([result,smm_fuzz_proj,avaliable_cpu])
         while True:
             p = psutil.Process(result.pid)
             cpu_usage = p.cpu_percent(interval=1)
@@ -137,11 +140,14 @@ while True:
                 if f[0].returncode != 10:
                    waiting_jobs.insert(0, f[1])  
             elif is_process_deadlock(f[0]):
+                print("Deadlock detected, killing the process")
+                print(f[1])
                 f[0].kill()
                 to_exit.append(f)
                 waiting_jobs.insert(0, f[1])  
         for f in to_exit:
             running_jobs.remove(f)
+            avaliable_cpus.append(f[2])
         if len(waiting_jobs) == 0 and len(running_jobs) == 0:
             exit(0)
         if len(waiting_jobs) != 0:
