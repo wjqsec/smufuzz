@@ -134,15 +134,15 @@ while True:
             if f[0].poll() is not None:
                 f[0].wait()
                 to_exit.append(f)
-            #     if f[0].returncode != 10 and not ctrl_c_pressed:
-            #        waiting_jobs.insert(0, f[1])  
-            # elif is_process_deadlock(f[0]):
-            #     print("Deadlock detected, killing the process")
-            #     print(f[1])
-            #     f[0].kill()
-            #     to_exit.append(f)
-            #     if not ctrl_c_pressed:
-            #         waiting_jobs.insert(0, f[1])  
+                if f[0].returncode != 10 and not ctrl_c_pressed:
+                   waiting_jobs.insert(0, f[1])  
+            elif is_process_deadlock(f[0]):
+                print("Deadlock detected, killing the process")
+                print(f[1])
+                f[0].kill()
+                to_exit.append(f)
+                if not ctrl_c_pressed:
+                    waiting_jobs.insert(0, f[1])  
         for f in to_exit:
             running_jobs.remove(f)
             avaliable_cpus.append(f[2])
