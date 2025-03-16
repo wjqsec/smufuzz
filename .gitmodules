@@ -1,7 +1,0 @@
-[submodule "LibAFL"]
-  path = LibAFL
-  url = https://github.com/wjqsec/LibAFL.git
-[submodule "edk2"]
-  path = edk2
-  url = https://github.com/wjqsec/edk2.git
-
