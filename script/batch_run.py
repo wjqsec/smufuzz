@@ -8,6 +8,7 @@ import psutil
 import r2pipe
 import signal
 import time
+import threading
 fuzz_bin = "../LibAFL/target/release/qemu_smm"
 compose_bin = "./compose.py"
 
@@ -114,6 +115,8 @@ running_jobs.clear()
 
 
 signal.signal(signal.SIGINT, sigint_handler)  
+
+
 avaliable_cpus = list(range(psutil.cpu_count(logical = False)))
 while True:
     while len(avaliable_cpus) !=0 and len(waiting_jobs) != 0:
@@ -135,7 +138,7 @@ while True:
             if cpu_usage > 50:
                 break
     while True:
-        time.sleep(5)
+        time.sleep(6)
         to_exit = []
         for f in running_jobs:
             if f[0].poll() is not None:
