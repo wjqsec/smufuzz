@@ -20,8 +20,7 @@ ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 prefix = "/home/w/sd/smm_fuzz/exp2"
 fuzz_run_time = "3h"
 fuzz_runs = 1
-# save_tmp_snapshot = "--save-tmp-snapshot"
-save_tmp_snapshot = ""
+save_tmp_snapshot = False
 
 smm_fuzz_projs1 = [
 [prefix + "/rsfuzzer/alien_r3/","Alienware 13 R3-alienware_13_r3_1.13.0.rom"],
@@ -72,7 +71,7 @@ smm_fuzz_projs2 = [
 ]
 
 
-smm_fuzz_projs = smm_fuzz_projs1 + smm_fuzz_projs2
+smm_fuzz_projs = smm_fuzz_projs1
 
 
 
@@ -123,7 +122,9 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time, save_tmp_snapshot]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time]
+        if save_tmp_snapshot:
+            fuzz_command.append("--save-tmp-snapshot")
         env_vars = os.environ.copy()
         env_vars["RUST_LOG"] = "info"
         result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
