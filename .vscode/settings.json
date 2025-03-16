@@ -57,6 +57,7 @@
         "uefi.h": "c",
         "smmcommunication.h": "c",
         "smifuzz.h": "c",
-        "smmfuzzprotocol.h": "c"
+        "smmfuzzprotocol.h": "c",
+        "ranges": "c"
     }
 }

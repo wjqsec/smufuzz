@@ -20,7 +20,8 @@ ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 prefix = "/home/w/sd/smm_fuzz/exp2"
 fuzz_run_time = "3h"
 fuzz_runs = 1
-save_tmp_snapshot = "--save-tmp-snapshot"
+# save_tmp_snapshot = "--save-tmp-snapshot"
+save_tmp_snapshot = ""
 
 smm_fuzz_projs1 = [
 [prefix + "/rsfuzzer/alien_r3/","Alienware 13 R3-alienware_13_r3_1.13.0.rom"],
@@ -92,9 +93,9 @@ def is_process_deadlock(proc):
     for i in range(10):
         p = psutil.Process(proc.pid)
         cpu_usage = p.cpu_percent(interval=1)
-        if cpu_usage > 5 or proc.poll() is not None:
+        if cpu_usage > 10 or proc.poll() is not None:
             return False
-        time.sleep(2)
+        time.sleep(6)
     return True
 
 
