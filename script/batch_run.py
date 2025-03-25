@@ -18,24 +18,28 @@ compose_bin = "./compose.py"
 ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
 ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 
-prefix = "/home/w/sd/smm_fuzz/exp2"
-fuzz_run_time = "3h"
+prefix = "/home/w/ssd/smm_fuzz"
+fuzz_run_time = "10s"
 fuzz_runs = 1
 save_tmp_snapshot = False
 
 smm_fuzz_projs1 = [
 [prefix + "/rsfuzzer/alien_r3/","Alienware 13 R3-alienware_13_r3_1.13.0.rom"],
-# [prefix + "/rsfuzzer/alien_x51/","Alienware X51 R3-dell_alienware_x51_r3"],
-# [prefix + "/rsfuzzer/asus_p453/","ASUS P453UJ-P453UJAS.311"],
-# [prefix + "/rsfuzzer/asus_un65u/","ASUS UN65U-UN65U-ASUS-0616.CAP"],
-# [prefix + "/rsfuzzer/game_x570/","X570 GAMING X-X570GX.36e"],
-# [prefix + "/rsfuzzer/game_z690/","Z690 GAMING X-Z690GAMINGX.F3"],
-# [prefix + "/rsfuzzer/hp_20/","HP 20-c000-hp-20-c000_versopm.bin"],
+[prefix + "/rsfuzzer/alien_x51/","Alienware X51 R3-dell_alienware_x51_r3"],
+[prefix + "/rsfuzzer/asus_p453/","ASUS P453UJ-P453UJAS.311"],
+[prefix + "/rsfuzzer/asus_un65u/","ASUS UN65U-UN65U-ASUS-0616.CAP"],
+
+[prefix + "/rsfuzzer/game_x570/","X570 GAMING X-X570GX.36e"],
+[prefix + "/rsfuzzer/game_z690/","Z690 GAMING X-Z690GAMINGX.F3"], 
+
+[prefix + "/rsfuzzer/hp_20/","HP 20-c000-hp-20-c000_versopm.bin"],
 # [prefix + "/rsfuzzer/hp_obelisk/","HP Obelisk 875-0821D.bin"],
 # [prefix + "/rsfuzzer/hp_z2/","HP Z2 Mini G4 -31A298"],
+
 # [prefix + "/rsfuzzer/hp_z440/","HP Z440-M60_0256.bin"],
-# [prefix + "/rsfuzzer/think_m700/","ThinkCentre M700-imagefw.rom"],
+[prefix + "/rsfuzzer/think_m700/","ThinkCentre M700-imagefw.rom"],
 # [prefix + "/rsfuzzer/think_p900/","Thinkstation P900-thinkpadp900.ROM"],
+
 # [prefix + "/rsfuzzer/think_x1/","Thinkpad X1 Fold-x1fold_version.FL1"],
 # [prefix + "/exp/microsoft_surface_go_wifi/","microsoft_surface_go_wifi.bin"],
 # [prefix + "/exp/msi_E15G3IMS/","msi_E15G3IMS.107"],
@@ -100,17 +104,17 @@ def is_process_deadlock(proc):
 
 
 for proj in smm_fuzz_projs:
-    print("Fuzzing: " + proj[0])
-    shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
-    shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
-    compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
-    result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    running_jobs.append([result,0])
-    print("Embedding over")
+    print("Embedding: " + proj[0])
+    # shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
+    # shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
+    # compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
+    # result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # running_jobs.append([result,0])
     for i in range(fuzz_runs):
         waiting_jobs.append([proj[0],proj[1], i+1])
 for f in running_jobs:
     f[0].wait()
+print("Embedding over")
 running_jobs.clear()
 
 
@@ -125,18 +129,14 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","1m"]
         if save_tmp_snapshot:
             fuzz_command.append("--save-tmp-snapshot")
         env_vars = os.environ.copy()
         env_vars["RUST_LOG"] = "info"
         result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
         running_jobs.append([result,smm_fuzz_proj,avaliable_cpu])
-        while True:
-            p = psutil.Process(result.pid)
-            cpu_usage = p.cpu_percent(interval=1)
-            if cpu_usage > 50:
-                break
+
     while True:
         time.sleep(6)
         to_exit = []
@@ -144,15 +144,15 @@ while True:
             if f[0].poll() is not None:
                 f[0].wait()
                 to_exit.append(f)
-                if f[0].returncode != 10 and not ctrl_c_pressed:
-                   waiting_jobs.insert(0, f[1])  
-            elif is_process_deadlock(f[0]):
-                print("Deadlock detected, killing the process")
-                print(f[1])
-                f[0].kill()
-                to_exit.append(f)
-                if not ctrl_c_pressed:
-                    waiting_jobs.insert(0, f[1])  
+                # if f[0].returncode != 10 and not ctrl_c_pressed:  
+                #    waiting_jobs.insert(0, f[1])  
+            # elif is_process_deadlock(f[0]):
+            #     print("Deadlock detected, killing the process")
+            #     print(f[1])
+            #     f[0].kill()
+            #     to_exit.append(f)
+            #     if not ctrl_c_pressed:
+            #         waiting_jobs.insert(0, f[1])  
         for f in to_exit:
             running_jobs.remove(f)
             avaliable_cpus.append(f[2])
