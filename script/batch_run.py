@@ -9,6 +9,14 @@ import r2pipe
 import signal
 import time
 import threading
+
+#------------------------------------------------------------- config
+prefix = "/home/w/ssd/smm_fuzz"
+fuzz_run_time = "10s"
+fuzz_runs = 1
+save_tmp_snapshot = False
+
+#-------------------------------------------------------------
 fuzz_bin = "../LibAFL/target/release/qemu_smm"
 compose_bin = "./compose.py"
 
@@ -18,12 +26,8 @@ compose_bin = "./compose.py"
 ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
 ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 
-prefix = "/home/w/ssd/smm_fuzz"
-fuzz_run_time = "10s"
-fuzz_runs = 1
-save_tmp_snapshot = False
-
 smm_fuzz_projs1 = [
+
 [prefix + "/rsfuzzer/alien_r3/","Alienware 13 R3-alienware_13_r3_1.13.0.rom"],
 [prefix + "/rsfuzzer/alien_x51/","Alienware X51 R3-dell_alienware_x51_r3"],
 [prefix + "/rsfuzzer/asus_p453/","ASUS P453UJ-P453UJAS.311"],
@@ -33,18 +37,18 @@ smm_fuzz_projs1 = [
 [prefix + "/rsfuzzer/game_z690/","Z690 GAMING X-Z690GAMINGX.F3"], 
 
 [prefix + "/rsfuzzer/hp_20/","HP 20-c000-hp-20-c000_versopm.bin"],
-# [prefix + "/rsfuzzer/hp_obelisk/","HP Obelisk 875-0821D.bin"],
-# [prefix + "/rsfuzzer/hp_z2/","HP Z2 Mini G4 -31A298"],
+[prefix + "/rsfuzzer/hp_obelisk/","HP Obelisk 875-0821D.bin"],
+[prefix + "/rsfuzzer/hp_z2/","HP Z2 Mini G4 -31A298"],
 
-# [prefix + "/rsfuzzer/hp_z440/","HP Z440-M60_0256.bin"],
+[prefix + "/rsfuzzer/hp_z440/","HP Z440-M60_0256.bin"],
 [prefix + "/rsfuzzer/think_m700/","ThinkCentre M700-imagefw.rom"],
-# [prefix + "/rsfuzzer/think_p900/","Thinkstation P900-thinkpadp900.ROM"],
+[prefix + "/rsfuzzer/think_p900/","Thinkstation P900-thinkpadp900.ROM"],
 
-# [prefix + "/rsfuzzer/think_x1/","Thinkpad X1 Fold-x1fold_version.FL1"],
-# [prefix + "/exp/microsoft_surface_go_wifi/","microsoft_surface_go_wifi.bin"],
-# [prefix + "/exp/msi_E15G3IMS/","msi_E15G3IMS.107"],
-# [prefix + "/exp/msi_E1585IMS/","msi_E1585IMS.318"],
-# [prefix + "/exp/msi_E15F4IBA/","msi_E15F4IBA.109"],
+[prefix + "/rsfuzzer/think_x1/","Thinkpad X1 Fold-x1fold_version.FL1"],
+[prefix + "/exp/microsoft_surface_go_wifi/","microsoft_surface_go_wifi.bin"],
+[prefix + "/exp/msi_E15G3IMS/","msi_E15G3IMS.107"],
+[prefix + "/exp/msi_E1585IMS/","msi_E1585IMS.318"],
+[prefix + "/exp/msi_E15F4IBA/","msi_E15F4IBA.109"],
 
 # [prefix + "/rsfuzzer/think_s30/","ThinkStation S30-IMAGEA2.bios"],  #broken
 # [prefix + "/exp/hp_866c6ea/","hp_866c6ea.bin"],   #286 modules
@@ -93,23 +97,14 @@ def sigint_handler(signum, frame):
     waiting_jobs.clear()
     ctrl_c_pressed = True
 
-def is_process_deadlock(proc):
-    for i in range(10):
-        p = psutil.Process(proc.pid)
-        cpu_usage = p.cpu_percent(interval=1)
-        if cpu_usage > 10 or proc.poll() is not None:
-            return False
-        time.sleep(6)
-    return True
-
 
 for proj in smm_fuzz_projs:
     print("Embedding: " + proj[0])
-    # shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
-    # shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
-    # compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
-    # result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    # running_jobs.append([result,0])
+    shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
+    shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
+    compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
+    result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    running_jobs.append([result,0])
     for i in range(fuzz_runs):
         waiting_jobs.append([proj[0],proj[1], i+1])
 for f in running_jobs:
@@ -144,15 +139,8 @@ while True:
             if f[0].poll() is not None:
                 f[0].wait()
                 to_exit.append(f)
-                # if f[0].returncode != 10 and not ctrl_c_pressed:  
-                #    waiting_jobs.insert(0, f[1])  
-            # elif is_process_deadlock(f[0]):
-            #     print("Deadlock detected, killing the process")
-            #     print(f[1])
-            #     f[0].kill()
-            #     to_exit.append(f)
-            #     if not ctrl_c_pressed:
-            #         waiting_jobs.insert(0, f[1])  
+                if f[0].returncode != 10 and not ctrl_c_pressed:  
+                   waiting_jobs.insert(0, f[1])  
         for f in to_exit:
             running_jobs.remove(f)
             avaliable_cpus.append(f[2])
