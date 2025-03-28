@@ -58,6 +58,7 @@
         "smmcommunication.h": "c",
         "smifuzz.h": "c",
         "smmfuzzprotocol.h": "c",
-        "ranges": "c"
+        "ranges": "c",
+        "bit": "cpp"
     }
 }

@@ -12,7 +12,7 @@ import threading
 
 #------------------------------------------------------------- config
 prefix = "/home/w/ssd/smm_fuzz"
-fuzz_run_time = "10s"
+fuzz_run_time = "24h"
 fuzz_runs = 1
 save_tmp_snapshot = False
 
@@ -80,7 +80,7 @@ smm_fuzz_projs2 = [
 ]
 
 
-smm_fuzz_projs = smm_fuzz_projs1
+smm_fuzz_projs = smm_fuzz_projs2
 
 
 
@@ -124,7 +124,7 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","1m"]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","30s"]
         if save_tmp_snapshot:
             fuzz_command.append("--save-tmp-snapshot")
         env_vars = os.environ.copy()
@@ -139,8 +139,8 @@ while True:
             if f[0].poll() is not None:
                 f[0].wait()
                 to_exit.append(f)
-                if f[0].returncode != 10 and not ctrl_c_pressed:  
-                   waiting_jobs.insert(0, f[1])  
+                # if f[0].returncode != 10 and not ctrl_c_pressed:  
+                #    waiting_jobs.insert(0, f[1])  
         for f in to_exit:
             running_jobs.remove(f)
             avaliable_cpus.append(f[2])
