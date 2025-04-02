@@ -158,11 +158,11 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
                         outputf.close()
                         headerf.close()
                         bodyf.close()
-
-                        for folder, subs, files in os.walk(folder):
-                            if os.path.isdir(folder):
-                                if "PE32 image section" in folder:
-                                    shutil.copyfile(os.path.join(folder,"body.bin"), os.path.join(efis_path,module+".efi"))
+                        
+                    for folder, subs, files in os.walk(folder):
+                        if os.path.isdir(folder):
+                            if "PE32 image section" in folder:
+                                shutil.copyfile(os.path.join(folder,"body.bin"), os.path.join(efis_path,module+".efi"))
 
                     if last_add == "" : 
                         utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe",module_filename,"save",ovmf_firmware]

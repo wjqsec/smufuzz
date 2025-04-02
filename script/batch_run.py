@@ -12,7 +12,7 @@ import threading
 
 #------------------------------------------------------------- config
 prefix = "/home/w/ssd/smm_fuzz"
-fuzz_run_time = "24h"
+fuzz_run_time = "8s"
 fuzz_runs = 1
 save_tmp_snapshot = False
 
@@ -32,18 +32,14 @@ smm_fuzz_projs1 = [
 [prefix + "/rsfuzzer/alien_x51/","Alienware X51 R3-dell_alienware_x51_r3"],
 [prefix + "/rsfuzzer/asus_p453/","ASUS P453UJ-P453UJAS.311"],
 [prefix + "/rsfuzzer/asus_un65u/","ASUS UN65U-UN65U-ASUS-0616.CAP"],
-
 [prefix + "/rsfuzzer/game_x570/","X570 GAMING X-X570GX.36e"],
 [prefix + "/rsfuzzer/game_z690/","Z690 GAMING X-Z690GAMINGX.F3"], 
-
 [prefix + "/rsfuzzer/hp_20/","HP 20-c000-hp-20-c000_versopm.bin"],
 [prefix + "/rsfuzzer/hp_obelisk/","HP Obelisk 875-0821D.bin"],
 [prefix + "/rsfuzzer/hp_z2/","HP Z2 Mini G4 -31A298"],
-
 [prefix + "/rsfuzzer/hp_z440/","HP Z440-M60_0256.bin"],
 [prefix + "/rsfuzzer/think_m700/","ThinkCentre M700-imagefw.rom"],
 [prefix + "/rsfuzzer/think_p900/","Thinkstation P900-thinkpadp900.ROM"],
-
 [prefix + "/rsfuzzer/think_x1/","Thinkpad X1 Fold-x1fold_version.FL1"],
 [prefix + "/exp/microsoft_surface_go_wifi/","microsoft_surface_go_wifi.bin"],
 [prefix + "/exp/msi_E15G3IMS/","msi_E15G3IMS.107"],
@@ -53,6 +49,11 @@ smm_fuzz_projs1 = [
 # [prefix + "/rsfuzzer/think_s30/","ThinkStation S30-IMAGEA2.bios"],  #broken
 # [prefix + "/exp/hp_866c6ea/","hp_866c6ea.bin"],   #286 modules
 # [prefix + "/exp/microsoft_surfacepro_10_for_business/","microsoft_surfacepro_10_for_business.bin"], # no smm modules
+# [prefix + "/exp/dell_ispiron145410/","dell_ispiron145410.bin"],
+# [prefix + "/exp/dell_latitude7330/","dell_latitude7330.bin"],
+# [prefix + "/exp/dell_vostro7620/","dell_vostro7620.bin"],
+# [prefix + "/exp/dell_xps1595752in1/","dell_xps1595752in1.bin"],
+# [prefix + "/exp/dell_xps179700/","dell_xps179700.bin"],
 
 ]
 smm_fuzz_projs2 = [
@@ -61,11 +62,6 @@ smm_fuzz_projs2 = [
 [prefix + "/exp/asus_a407ub/","asus_a407ub.rom"],
 [prefix + "/exp/asus_laptop_15_k509fa/","asus_laptop_15_k509fa.rom"],
 [prefix + "/exp/asus_x509da/","asus_x509da.rom"],
-[prefix + "/exp/dell_ispiron145410/","dell_ispiron145410.bin"],
-[prefix + "/exp/dell_latitude7330/","dell_latitude7330.bin"],
-[prefix + "/exp/dell_vostro7620/","dell_vostro7620.bin"],
-[prefix + "/exp/dell_xps1595752in1/","dell_xps1595752in1.bin"],
-[prefix + "/exp/dell_xps179700/","dell_xps179700.bin"],
 [prefix + "/exp/gigabyte_aero15oled/","gigabyte_aero15oled.rom"],
 [prefix + "/exp/gigabyte_x3plusr7/","gigabyte_x3plusr7.A0F"],
 [prefix + "/exp/gigabyte_x9dt/","gigabyte_x9dt.B03"],
@@ -110,6 +106,8 @@ for proj in smm_fuzz_projs:
 for f in running_jobs:
     f[0].wait()
 print("Embedding over")
+
+
 running_jobs.clear()
 
 
@@ -124,7 +122,7 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","2m"]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","1m"]
         if save_tmp_snapshot:
             fuzz_command.append("--save-tmp-snapshot")
         env_vars = os.environ.copy()
@@ -133,7 +131,7 @@ while True:
         running_jobs.append([result,smm_fuzz_proj,avaliable_cpu])
 
     while True:
-        time.sleep(6)
+        time.sleep(2)
         to_exit = []
         for f in running_jobs:
             if f[0].poll() is not None:
@@ -142,7 +140,7 @@ while True:
                 if f[0].returncode != 10 and not ctrl_c_pressed:  
                     print("retry:")
                     print(f[1])
-                    waiting_jobs.insert(0, f[1])  
+                #     waiting_jobs.insert(0, f[1])  
         for f in to_exit:
             running_jobs.remove(f)
             avaliable_cpus.append(f[2])
