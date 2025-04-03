@@ -59,6 +59,13 @@
         "smifuzz.h": "c",
         "smmfuzzprotocol.h": "c",
         "ranges": "c",
-        "bit": "cpp"
+        "bit": "cpp",
+        "*.tcc": "c",
+        "optional": "c",
+        "istream": "c",
+        "ostream": "c",
+        "system_error": "c",
+        "tuple": "c",
+        "type_traits": "c"
     }
 }

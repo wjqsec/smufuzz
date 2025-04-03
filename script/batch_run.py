@@ -12,7 +12,7 @@ import threading
 
 #------------------------------------------------------------- config
 prefix = "/home/w/ssd/smm_fuzz"
-fuzz_run_time = "8s"
+fuzz_run_time = "24h"
 fuzz_runs = 1
 save_tmp_snapshot = False
 
@@ -85,22 +85,17 @@ running_jobs = []
 waiting_jobs = []
 ctrl_c_pressed = False
 def sigint_handler(signum, frame):
-    global waiting_jobs
-    global running_jobs
     global ctrl_c_pressed
-    for f in running_jobs:
-        os.kill(f[0].pid, signal.SIGINT)
-    waiting_jobs.clear()
     ctrl_c_pressed = True
 
 
 for proj in smm_fuzz_projs:
     print("Embedding: " + proj[0])
-    shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
-    shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
-    compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
-    result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    running_jobs.append([result,0])
+    # shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
+    # shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
+    # compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
+    # result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    # running_jobs.append([result,0])
     for i in range(fuzz_runs):
         waiting_jobs.append([proj[0],proj[1], i+1])
 for f in running_jobs:
@@ -131,7 +126,7 @@ while True:
         running_jobs.append([result,smm_fuzz_proj,avaliable_cpu])
 
     while True:
-        time.sleep(2)
+        time.sleep(1)
         to_exit = []
         for f in running_jobs:
             if f[0].poll() is not None:
@@ -144,7 +139,9 @@ while True:
         for f in to_exit:
             running_jobs.remove(f)
             avaliable_cpus.append(f[2])
+        if ctrl_c_pressed and len(running_jobs) == 0:
+            exit(0)
         if len(waiting_jobs) == 0 and len(running_jobs) == 0:
             exit(0)
-        if len(waiting_jobs) != 0:
+        if len(waiting_jobs) != 0 and not ctrl_c_pressed:
             break

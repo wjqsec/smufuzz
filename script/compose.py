@@ -49,7 +49,8 @@ def get_all_smm_modules(firmware):
     with open(firmware + ".report.txt") as f:
         for line in f.readlines():
             if "SMM module" in line or "SMM core" in line or "Combined SMM/DXE" in line:
-                ret.append(line.split("|")[5].split(" ")[2].strip())
+                module = line.split("|")[5].split(" ")[2].strip()
+                ret.append(module)
     return ret
 
 def get_all_dxe_modules(firmware):
@@ -169,6 +170,7 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
                     else:
                         utk_insert_command = [utk_path,ovmf_firmware,"insert_after",last_add,module_filename,"save",ovmf_firmware]
                     subprocess.run(utk_insert_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    last_add = module
     print("in total " + str(len(smm_modules)))
 
 
