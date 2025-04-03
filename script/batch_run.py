@@ -91,11 +91,11 @@ def sigint_handler(signum, frame):
 
 for proj in smm_fuzz_projs:
     print("Embedding: " + proj[0])
-    # shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
-    # shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
-    # compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
-    # result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    # running_jobs.append([result,0])
+    shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
+    shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
+    compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
+    result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    running_jobs.append([result,0])
     for i in range(fuzz_runs):
         waiting_jobs.append([proj[0],proj[1], i+1])
 for f in running_jobs:
