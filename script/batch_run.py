@@ -117,7 +117,7 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","1m"]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","30s"]
         if save_tmp_snapshot:
             fuzz_command.append("--save-tmp-snapshot")
         env_vars = os.environ.copy()

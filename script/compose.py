@@ -175,19 +175,25 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
 
 
 def clean(ovmf_firmware,input_firmware):
-    os.remove(ovmf_firmware + ".report.txt")
-    os.remove(ovmf_firmware + ".guids.csv")
-    shutil.rmtree(ovmf_firmware + ".dump")
-
-    os.remove(input_firmware + ".report.txt")
-    os.remove(input_firmware + ".guids.csv")
-    shutil.rmtree(input_firmware + ".dump")
+    if os.path.exists(ovmf_firmware + ".report.txt"):
+        os.remove(ovmf_firmware + ".report.txt")
+    if os.path.exists(ovmf_firmware + ".guids.csv"):    
+        os.remove(ovmf_firmware + ".guids.csv")
+    if os.path.exists(ovmf_firmware + ".dump"):
+        shutil.rmtree(ovmf_firmware + ".dump")
+    if os.path.exists(input_firmware + ".report.txt"):
+        os.remove(input_firmware + ".report.txt")
+    if os.path.exists(input_firmware + ".guids.csv"):
+        os.remove(input_firmware + ".guids.csv")
+    if os.path.exists(input_firmware + ".dump"):
+        shutil.rmtree(input_firmware + ".dump")
 
 
 if __name__ == "__main__":
     ovmf_path = sys.argv[2]
     vendor_firmware_path = sys.argv[1]
     proj_path = os.path.dirname(ovmf_path)
+    clean(vendor_firmware_path, ovmf_path)
     vendor_smm_modules = get_all_smm_modules(vendor_firmware_path)
     ovmf_modules = get_all_smm_modules(ovmf_path)
     # ovmf_dxe_modules = get_all_dxe_modules(ovmf_path)
