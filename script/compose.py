@@ -171,6 +171,7 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
                         utk_insert_command = [utk_path,ovmf_firmware,"insert_after",last_add,module_filename,"save",ovmf_firmware]
                     subprocess.run(utk_insert_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                     last_add = module
+                    break
     print("in total " + str(len(smm_modules)))
 
 
