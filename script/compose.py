@@ -169,7 +169,7 @@ def insert_smm_modules(ovmf_firmware,input_firmware,smm_modules):
                         utk_insert_command = [utk_path,ovmf_firmware,"insert_after","VirtioRngDxe",module_filename,"save",ovmf_firmware]
                     else:
                         utk_insert_command = [utk_path,ovmf_firmware,"insert_after",last_add,module_filename,"save",ovmf_firmware]
-                    subprocess.run(utk_insert_command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                    subprocess.run(utk_insert_command, text=True)
                     last_add = module
                     break
     print("in total " + str(len(smm_modules)))
@@ -197,8 +197,7 @@ if __name__ == "__main__":
     clean(vendor_firmware_path, ovmf_path)
     vendor_smm_modules = get_all_smm_modules(vendor_firmware_path)
     ovmf_modules = get_all_smm_modules(ovmf_path)
-    # ovmf_dxe_modules = get_all_dxe_modules(ovmf_path)
-    ovmf_dxe_modules = []
+    ovmf_dxe_modules = get_all_dxe_modules(ovmf_path)
     ovmf_delete_modules = [x for x in ovmf_modules if x in vendor_smm_modules and x not in use_ovmf_guids]
     ovmf_delete_modules += remove_ovmf_guid
     delete_smm_module(ovmf_path,ovmf_delete_modules)

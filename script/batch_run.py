@@ -12,7 +12,7 @@ import threading
 
 #------------------------------------------------------------- config
 prefix = "/home/w/ssd/smm_fuzz"
-fuzz_run_time = "24h"
+fuzz_run_time = "10s"
 fuzz_runs = 1
 save_tmp_snapshot = False
 
@@ -20,11 +20,11 @@ save_tmp_snapshot = False
 fuzz_bin = "../LibAFL/target/release/qemu_smm"
 compose_bin = "./compose.py"
 
-# ovmf_bin = "../edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_CODE.fd"
-# ovmf_vars = "../edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_VARS.fd"
+ovmf_bin = "../edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_CODE.fd"
+ovmf_vars = "../edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_VARS.fd"
 
-ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
-ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
+# ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
+# ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 
 smm_fuzz_projs1 = [
 
@@ -76,7 +76,7 @@ smm_fuzz_projs2 = [
 ]
 
 
-smm_fuzz_projs = smm_fuzz_projs1
+smm_fuzz_projs = smm_fuzz_projs1 + smm_fuzz_projs2
 
 
 
@@ -94,7 +94,7 @@ for proj in smm_fuzz_projs:
     shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
     shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
     compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
-    result = subprocess.Popen(compose_command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    result = subprocess.Popen(compose_command)
     running_jobs.append([result,0])
     for i in range(fuzz_runs):
         waiting_jobs.append([proj[0],proj[1], i+1])
@@ -104,7 +104,6 @@ print("Embedding over")
 
 
 running_jobs.clear()
-
 
 signal.signal(signal.SIGINT, sigint_handler)  
 
@@ -117,7 +116,7 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","1m"]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","4m"]
         if save_tmp_snapshot:
             fuzz_command.append("--save-tmp-snapshot")
         env_vars = os.environ.copy()
@@ -135,7 +134,6 @@ while True:
                 if f[0].returncode != 10 and not ctrl_c_pressed:  
                     print("retry:")
                     print(f[1])
-                #     waiting_jobs.insert(0, f[1])  
         for f in to_exit:
             running_jobs.remove(f)
             avaliable_cpus.append(f[2])
