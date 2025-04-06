@@ -11,7 +11,7 @@ import time
 import threading
 
 #------------------------------------------------------------- config
-prefix = "/home/w/ssd/smm_fuzz"
+prefix = "~/exp"
 fuzz_run_time = "10s"
 fuzz_runs = 1
 save_tmp_snapshot = False
