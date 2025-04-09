@@ -11,7 +11,7 @@ import time
 import threading
 
 #------------------------------------------------------------- config
-prefix = "~/exp"
+prefix = "/home/w/exp"
 fuzz_run_time = "10s"
 fuzz_runs = 1
 save_tmp_snapshot = False
@@ -54,9 +54,14 @@ smm_fuzz_projs1 = [
 # [prefix + "/exp/dell_vostro7620/","dell_vostro7620.bin"],
 # [prefix + "/exp/dell_xps1595752in1/","dell_xps1595752in1.bin"],
 # [prefix + "/exp/dell_xps179700/","dell_xps179700.bin"],
-
+# [prefix + "/exp/hp_a1yl6ua/","hp_a1yl6ua.bin"],
+# [prefix + "/exp/lenovo_ideapad_14alc7/","lenovo_ideapad_14alc7.bin"],
+# [prefix + "/exp/lenovo_x1extreme1gen/","lenovo_x1extreme1gen.FL1"],
 ]
 smm_fuzz_projs2 = [
+
+[prefix + "/exp/razer_rz090196x/","razer_rz090196x.bin"],
+[prefix + "/exp/razer_rz0903102/","razer_rz0903102.bin"],
 [prefix + "/exp/acer_aspirea351/","acer_aspirea351.bin"],
 [prefix + "/exp/acer_aspirer5371t/","acer_aspirer5371t.fd"],
 [prefix + "/exp/asus_a407ub/","asus_a407ub.rom"],
@@ -66,17 +71,14 @@ smm_fuzz_projs2 = [
 [prefix + "/exp/gigabyte_x3plusr7/","gigabyte_x3plusr7.A0F"],
 [prefix + "/exp/gigabyte_x9dt/","gigabyte_x9dt.B03"],
 [prefix + "/exp/hp_8750000/","hp_8750000.bin"],
-[prefix + "/exp/hp_a1yl6ua/","hp_a1yl6ua.bin"],
-[prefix + "/exp/lenovo_ideapad_14alc7/","lenovo_ideapad_14alc7.bin"],
 [prefix + "/exp/lenovo_thinkpadx1tablet1gen/","lenovo_thinkpadx1tablet1gen.FL1"],
 [prefix + "/exp/lenovo_x12in1gen9/","lenovo_x12in1gen9.FL1"],
-[prefix + "/exp/lenovo_x1extreme1gen/","lenovo_x1extreme1gen.FL1"],
-[prefix + "/exp/razer_rz090196x/","razer_rz090196x.bin"],
-[prefix + "/exp/razer_rz0903102/","razer_rz0903102.bin"],
+
+
 ]
 
 
-smm_fuzz_projs = smm_fuzz_projs1 + smm_fuzz_projs2
+smm_fuzz_projs = smm_fuzz_projs1
 
 
 
@@ -116,7 +118,7 @@ while True:
         tag = str(smm_fuzz_proj[2])
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","4m"]
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","1m"]
         if save_tmp_snapshot:
             fuzz_command.append("--save-tmp-snapshot")
         env_vars = os.environ.copy()

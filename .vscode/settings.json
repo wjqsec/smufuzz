@@ -68,6 +68,11 @@
         "tuple": "c",
         "type_traits": "c",
         "chrono": "c",
-        "compare": "c"
+        "compare": "c",
+        "variableruntimecache.h": "c",
+        "variable.h": "c",
+        "dxecoreentrypoint.h": "c",
+        "memoryallocationhob.h": "c",
+        "random": "c"
     }
 }
