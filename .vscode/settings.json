@@ -73,6 +73,7 @@
         "variable.h": "c",
         "dxecoreentrypoint.h": "c",
         "memoryallocationhob.h": "c",
-        "random": "c"
+        "random": "c",
+        "simplefilesystem.h": "c"
     }
 }
