@@ -11,8 +11,8 @@ import time
 import threading
 
 #------------------------------------------------------------- config
-prefix = "/home/w/exp"
-fuzz_run_time = "10s"
+prefix = "/home/w/ssd/smm_fuzz"
+fuzz_run_time = "14h"
 fuzz_runs = 1
 save_tmp_snapshot = False
 
@@ -20,11 +20,11 @@ save_tmp_snapshot = False
 fuzz_bin = "../LibAFL/target/release/qemu_smm"
 compose_bin = "./compose.py"
 
-ovmf_bin = "../edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_CODE.fd"
-ovmf_vars = "../edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_VARS.fd"
+# ovmf_bin = "../edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_CODE.fd"
+# ovmf_vars = "../edk2/Build/OvmfX64/DEBUG_GCC/FV/OVMF_VARS.fd"
 
-# ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
-# ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
+ovmf_bin = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_CODE.fd"
+ovmf_vars = "../edk2/Build/OvmfX64/RELEASE_GCC/FV/OVMF_VARS.fd"
 
 smm_fuzz_projs1 = [
 
@@ -60,17 +60,17 @@ smm_fuzz_projs1 = [
 ]
 smm_fuzz_projs2 = [
 
-# [prefix + "/exp/razer_rz090196x/","razer_rz090196x.bin"],
-# [prefix + "/exp/razer_rz0903102/","razer_rz0903102.bin"],
+[prefix + "/exp/razer_rz090196x/","razer_rz090196x.bin"],
+[prefix + "/exp/razer_rz0903102/","razer_rz0903102.bin"],
 [prefix + "/exp/acer_aspirea351/","acer_aspirea351.bin"],
 [prefix + "/exp/acer_aspirer5371t/","acer_aspirer5371t.fd"],
-# [prefix + "/exp/asus_a407ub/","asus_a407ub.rom"],
-# [prefix + "/exp/asus_laptop_15_k509fa/","asus_laptop_15_k509fa.rom"],
-# [prefix + "/exp/asus_x509da/","asus_x509da.rom"],
-# [prefix + "/exp/gigabyte_aero15oled/","gigabyte_aero15oled.rom"],
-# [prefix + "/exp/gigabyte_x3plusr7/","gigabyte_x3plusr7.A0F"],
-# [prefix + "/exp/gigabyte_x9dt/","gigabyte_x9dt.B03"],
-# [prefix + "/exp/hp_8750000/","hp_8750000.bin"],
+[prefix + "/exp/asus_a407ub/","asus_a407ub.rom"],
+[prefix + "/exp/asus_laptop_15_k509fa/","asus_laptop_15_k509fa.rom"],
+[prefix + "/exp/asus_x509da/","asus_x509da.rom"],
+[prefix + "/exp/gigabyte_aero15oled/","gigabyte_aero15oled.rom"],
+[prefix + "/exp/gigabyte_x3plusr7/","gigabyte_x3plusr7.A0F"],
+[prefix + "/exp/gigabyte_x9dt/","gigabyte_x9dt.B03"],
+[prefix + "/exp/hp_8750000/","hp_8750000.bin"],
 [prefix + "/exp/lenovo_thinkpadx1tablet1gen/","lenovo_thinkpadx1tablet1gen.FL1"],
 [prefix + "/exp/lenovo_x12in1gen9/","lenovo_x12in1gen9.FL1"],
 
@@ -78,7 +78,7 @@ smm_fuzz_projs2 = [
 ]
 
 
-smm_fuzz_projs = smm_fuzz_projs2
+smm_fuzz_projs = smm_fuzz_projs1
 
 
 
