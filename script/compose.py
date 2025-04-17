@@ -33,7 +33,6 @@ unsupported_guids = [
 use_ovmf_guids = [
    'A3FF0EF5-0C28-42F5-B544-8C7DE1E80014', #dexsmm
    '470CB248-E8AC-473C-BB4F-81069A1FE6FD', #faulttolerantwriteSmm
-#    '23A089B3-EED5-4AC5-B2AB-43E3298C2343', #variablesmm
 ]
 remove_ovmf_guid = [
     'E2EA6F47-E678-47FA-8C1B-02A03E825C6E'
