@@ -93,8 +93,8 @@ def sigint_handler(signum, frame):
 
 for proj in smm_fuzz_projs:
     print("Embedding: " + proj[0])
-    shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd"))
-    shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
+    shutil.copyfile(ovmf_bin, os.path.join(proj[0], "OVMF_CODE.fd.backdup"))
+    shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd.backdup"))
     compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
     result = subprocess.Popen(compose_command)
     running_jobs.append(result)
@@ -113,11 +113,14 @@ avaliable_cpus = psutil.cpu_count(logical = False)
 while True:
     while avaliable_cpus != 0 and len(waiting_jobs) != 0:
         smm_fuzz_proj = waiting_jobs.pop(0)
+        smm_fuzz_proj_dir = smm_fuzz_proj[0]
         tag = str(smm_fuzz_proj[1])
         avaliable_cpus -= 1
-        os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
-        f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
-        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","30s"]
+        shutil.copyfile(os.path.join(proj[0], "OVMF_CODE.fd.backdup"), os.path.join(proj[0], "OVMF_CODE.fd"))
+        shutil.copyfile(os.path.join(proj[0], "OVMF_VARS.fd.backdup"), os.path.join(proj[0], "OVMF_VARS.fd"))
+        os.makedirs(os.path.join(smm_fuzz_proj_dir, tag), exist_ok=True)
+        f = open(os.path.join(os.path.join(smm_fuzz_proj_dir, tag),"fuzzer.log"), "w")
+        fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj_dir, "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","30s"]
         if save_tmp_snapshot:
             fuzz_command.append("--save-tmp-snapshot")
         env_vars = os.environ.copy()
