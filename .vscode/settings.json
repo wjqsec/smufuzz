@@ -74,6 +74,7 @@
         "dxecoreentrypoint.h": "c",
         "memoryallocationhob.h": "c",
         "random": "c",
-        "simplefilesystem.h": "c"
+        "simplefilesystem.h": "c",
+        "smmfirmwarevolumeblock.h": "c"
     }
 }

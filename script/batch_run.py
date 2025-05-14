@@ -11,10 +11,10 @@ import time
 import threading
 
 #------------------------------------------------------------- config
-prefix = "/home/w/exp"
-fuzz_run_time = "10s"
-fuzz_runs = 1
-save_tmp_snapshot = False
+prefix = "/root/exp"
+fuzz_run_time = "24h"
+fuzz_runs = 5
+save_tmp_snapshot = True
 
 #-------------------------------------------------------------
 fuzz_bin = "../LibAFL/target/release/qemu_smm"
@@ -42,9 +42,7 @@ smm_fuzz_projs1 = [
 [prefix + "/rsfuzzer/think_p900/","Thinkstation P900-thinkpadp900.ROM"],
 [prefix + "/rsfuzzer/think_x1/","Thinkpad X1 Fold-x1fold_version.FL1"],
 [prefix + "/exp/microsoft_surface_go_wifi/","microsoft_surface_go_wifi.bin"],
-[prefix + "/exp/msi_E15G3IMS/","msi_E15G3IMS.107"],
-[prefix + "/exp/msi_E1585IMS/","msi_E1585IMS.318"],
-[prefix + "/exp/msi_E15F4IBA/","msi_E15F4IBA.109"],
+
 
 # [prefix + "/rsfuzzer/think_s30/","ThinkStation S30-IMAGEA2.bios"],  #broken
 # [prefix + "/exp/hp_866c6ea/","hp_866c6ea.bin"],   #286 modules
@@ -73,7 +71,9 @@ smm_fuzz_projs2 = [
 [prefix + "/exp/hp_8750000/","hp_8750000.bin"],
 [prefix + "/exp/lenovo_thinkpadx1tablet1gen/","lenovo_thinkpadx1tablet1gen.FL1"],
 [prefix + "/exp/lenovo_x12in1gen9/","lenovo_x12in1gen9.FL1"],
-
+[prefix + "/exp/msi_E15G3IMS/","msi_E15G3IMS.107"],
+[prefix + "/exp/msi_E1585IMS/","msi_E1585IMS.318"],
+[prefix + "/exp/msi_E15F4IBA/","msi_E15F4IBA.109"],
 
 ]
 
@@ -97,25 +97,24 @@ for proj in smm_fuzz_projs:
     shutil.copyfile(ovmf_vars, os.path.join(proj[0], "OVMF_VARS.fd"))
     compose_command = ["python3", compose_bin, os.path.join(proj[0], proj[1]), os.path.join(proj[0], "OVMF_CODE.fd")]
     result = subprocess.Popen(compose_command)
-    running_jobs.append([result,0])
+    running_jobs.append(result)
     for i in range(fuzz_runs):
-        waiting_jobs.append([proj[0],proj[1], i+1])
+        waiting_jobs.append([proj[0], i+1])
 for f in running_jobs:
-    f[0].wait()
+    f.wait()
 print("Embedding over")
-
 
 running_jobs.clear()
 
 signal.signal(signal.SIGINT, sigint_handler)  
 
 
-avaliable_cpus = list(range(psutil.cpu_count(logical = False)))
+avaliable_cpus = psutil.cpu_count(logical = False)
 while True:
-    while len(avaliable_cpus) !=0 and len(waiting_jobs) != 0:
+    while avaliable_cpus != 0 and len(waiting_jobs) != 0:
         smm_fuzz_proj = waiting_jobs.pop(0)
-        avaliable_cpu = avaliable_cpus.pop(0)
-        tag = str(smm_fuzz_proj[2])
+        tag = str(smm_fuzz_proj[1])
+        avaliable_cpus -= 1
         os.makedirs(os.path.join(smm_fuzz_proj[0], tag), exist_ok=True)
         f = open(os.path.join(os.path.join(smm_fuzz_proj[0], tag),"fuzzer.log"), "w")
         fuzz_command = [fuzz_bin, "--proj",smm_fuzz_proj[0], "--tag" , tag, "fuzz","--fuzz-time",fuzz_run_time,"--init-phase-timeout-time","30s"]
@@ -124,8 +123,7 @@ while True:
         env_vars = os.environ.copy()
         env_vars["RUST_LOG"] = "info"
         result = subprocess.Popen(fuzz_command, stdout=f, stderr=f,env=env_vars)
-        running_jobs.append([result,smm_fuzz_proj,avaliable_cpu])
-
+        running_jobs.append([result,smm_fuzz_proj])
     while True:
         time.sleep(1)
         to_exit = []
@@ -133,12 +131,24 @@ while True:
             if f[0].poll() is not None:
                 f[0].wait()
                 to_exit.append(f)
-                if f[0].returncode != 10 and not ctrl_c_pressed:  
-                    print("return code {}".format(f[0].returncode))
-                    print(f[1])
+                fd = f[0]
+                smm_fuzz_proj = f[1]
+                smm_fuzz_proj_dir = smm_fuzz_proj[0]
+                tag = str(smm_fuzz_proj[1])
+                if fd.returncode != 10 and not ctrl_c_pressed:  
+                    waiting_jobs.append(smm_fuzz_proj)
+                    print("return code {}".format(fd.returncode))
+                    print(smm_fuzz_proj)
+                else:
+                    cov_command1 = [fuzz_bin, "--proj",smm_fuzz_proj_dir, "--tag" , tag, "coverage","--cov-module",smm_fuzz_proj_dir+"module.info","--effective-cov-module",smm_fuzz_proj_dir + "effective_module.info","--output",smm_fuzz_proj_dir + "cov1.log"]
+                    fd = subprocess.Popen(cov_command1, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    fd.wait()
+                    cov_command2 = [fuzz_bin, "--proj",smm_fuzz_proj_dir, "--tag" , tag, "coverage","--cov-module",smm_fuzz_proj_dir+"effective_module.info", "--include-init-phase","--output",smm_fuzz_proj_dir + "cov2.log"]
+                    fd = subprocess.Popen(cov_command2, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    fd.wait()
         for f in to_exit:
             running_jobs.remove(f)
-            avaliable_cpus.append(f[2])
+            avaliable_cpus += 1
         if ctrl_c_pressed and len(running_jobs) == 0:
             exit(0)
         if len(waiting_jobs) == 0 and len(running_jobs) == 0:
