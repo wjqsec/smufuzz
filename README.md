@@ -3,7 +3,7 @@
 code for S&P paper : SmuFuzz: Enable Deep System Management Mode Fuzzing in Fully Featured UEFI Runtime Environment
 
 # Usage
-
+```
 git clone https://github.com/wjqsec/smufuzz.git
 cd smufuzz
 git clone https://github.com/wjqsec/LibAFL.git
@@ -12,4 +12,4 @@ follow https://github.com/tianocore/tianocore.github.io/wiki/Getting-Started-wit
 cd LibAFL/fuzzers/qemu/qemu_smm
 cargo build --release
 refer to scripts to use
-
+```
