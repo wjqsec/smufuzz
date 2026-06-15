@@ -9,6 +9,9 @@ docker pull wjqsec555/smm_fuzz
 ```
 Binary, source code, and scripts are included.
 
+A usage video example:
+https://drive.google.com/file/d/1r5bdZpmja37r3OW1Hn5T3_Ky4x8qzx_T/view?usp=drive_link
+
 Native built:
 ```
 git clone https://github.com/wjqsec/smufuzz.git
