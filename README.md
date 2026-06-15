@@ -3,6 +3,13 @@
 code for S&P paper : SmuFuzz: Enable Deep System Management Mode Fuzzing in Fully Featured UEFI Runtime Environment
 
 # Usage
+Everything in a Docker image:
+```
+docker pull wjqsec555/smm_fuzz
+```
+Binary, source code, and scripts are included.
+
+Native built:
 ```
 git clone https://github.com/wjqsec/smufuzz.git
 cd smufuzz
